@@ -42,22 +42,20 @@ export const TaskCard = memo(function TaskCard({ taskId }: TaskCardProps) {
 
   return (
     <div
-      className={`rounded-xl border transition-all duration-200 overflow-hidden ${
-        task.status === 'done'
+      className={`rounded-xl border transition-all duration-200 overflow-hidden ${task.status === 'done'
           ? 'bg-emerald-950/10 border-emerald-800/20 opacity-80'
           : 'bg-white/[0.03] border-white/[0.08] hover:border-violet-500/40 hover:bg-white/[0.05]'
-      }`}
+        }`}
     >
       <div className="p-3.5 flex items-start gap-3">
         {/* Quick Completion Checkbox */}
         <button
           type="button"
           onClick={() => toggleTaskComplete(taskId)}
-          className={`w-5 h-5 rounded-md mt-0.5 flex items-center justify-center border transition-all ${
-            task.status === 'done'
+          className={`w-5 h-5 rounded-md mt-0.5 flex items-center justify-center border transition-all ${task.status === 'done'
               ? 'bg-emerald-500 border-emerald-400 text-black font-bold shadow-[0_0_8px_#34d399]'
               : 'border-white/20 hover:border-cyan-400 bg-black/40'
-          }`}
+            }`}
           aria-label={task.status === 'done' ? 'Mark task as incomplete' : 'Mark task as complete'}
         >
           {task.status === 'done' && (
@@ -71,9 +69,8 @@ export const TaskCard = memo(function TaskCard({ taskId }: TaskCardProps) {
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <p
-              className={`text-sm font-medium ${
-                task.status === 'done' ? 'line-through text-slate-400' : 'text-white'
-              }`}
+              className={`text-sm font-medium ${task.status === 'done' ? 'line-through text-slate-400' : 'text-white'
+                }`}
             >
               {task.title}
             </p>
@@ -102,9 +99,8 @@ export const TaskCard = memo(function TaskCard({ taskId }: TaskCardProps) {
             {/* Due Date */}
             {dueStr && (
               <span
-                className={`text-[10px] font-mono flex items-center gap-1 ${
-                  isOverdue ? 'text-rose-400 font-semibold' : 'text-slate-400'
-                }`}
+                className={`text-[10px] font-mono flex items-center gap-1 ${isOverdue ? 'text-rose-400 font-semibold' : 'text-slate-400'
+                  }`}
               >
                 <span>{isOverdue ? '⚠ Due ' : 'Due '}{dueStr}</span>
               </span>
