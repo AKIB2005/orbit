@@ -1,8 +1,13 @@
-import type { Project, Task, DependencyLink } from '../types';
+import type { Project, Task, DependencyLink, Milestone } from '../types';
 import { createId } from './id';
 import { getOrbitalParameters, calculateOrbitalPosition } from './orbitalKinematics';
 
-export function generateSeedData(): { projects: Project[]; tasks: Task[]; links: DependencyLink[] } {
+export function generateSeedData(): {
+  projects: Project[];
+  tasks: Task[];
+  links: DependencyLink[];
+  milestones: Milestone[];
+} {
   const now = Date.now();
   const idQuantum = createId();
   const idMobile = createId();
@@ -17,6 +22,21 @@ export function generateSeedData(): { projects: Project[]; tasks: Task[]; links:
   const posDesign = calculateOrbitalPosition(getOrbitalParameters(3), getOrbitalParameters(3).initialAngle);
   const posCloud = calculateOrbitalPosition(getOrbitalParameters(4), getOrbitalParameters(4).initialAngle);
 
+  // Milestones
+  const m1 = createId();
+  const m2 = createId();
+  const m3 = createId();
+  const m4 = createId();
+  const m5 = createId();
+
+  const milestones: Milestone[] = [
+    { id: m1, projectId: idQuantum, title: 'Alpha 3D Pipeline Sign-off', dueDate: now + 86400000 * 5, completed: false, createdAt: now - 86400000 * 8 },
+    { id: m2, projectId: idQuantum, title: 'Shader Performance Verification', dueDate: now - 86400000 * 1, completed: true, createdAt: now - 86400000 * 10 },
+    { id: m3, projectId: idMobile, title: 'Mobile Touch Controls Benchmark', dueDate: now + 86400000 * 8, completed: false, createdAt: now - 86400000 * 4 },
+    { id: m4, projectId: idNeural, title: 'Graph Cycle Prevention Suite', dueDate: now - 86400000 * 2, completed: true, createdAt: now - 86400000 * 6 },
+    { id: m5, projectId: idDesign, title: 'WCAG AA Design Review', dueDate: now + 86400000 * 12, completed: false, createdAt: now - 86400000 * 3 },
+  ];
+
   const projects: Project[] = [
     {
       id: idQuantum,
@@ -25,6 +45,11 @@ export function generateSeedData(): { projects: Project[]; tasks: Task[]; links:
       colorTheme: 'violet',
       status: 'active',
       position: posQuantum,
+      notes: `# Quantum Core Architecture
+- Rendering loop decoupled from React state via \`activePlanetPositions\`.
+- All celestial orbits calculated via Keplerian kinematics.
+- Memory budget capped at 120MB GPU VRAM.`,
+      targetDate: now + 86400000 * 14,
       createdAt: now - 86400000 * 12,
       updatedAt: now,
     },
@@ -35,6 +60,11 @@ export function generateSeedData(): { projects: Project[]; tasks: Task[]; links:
       colorTheme: 'cyan',
       status: 'active',
       position: posMobile,
+      notes: `# Mobile Experience Strategy
+- Provide full tactile parity with desktop.
+- Touch pinch-to-zoom and one-finger orbit rotation.
+- Automatically downgrade bloom and star count if DPR > 2.`,
+      targetDate: now + 86400000 * 21,
       createdAt: now - 86400000 * 9,
       updatedAt: now,
     },
@@ -45,6 +75,10 @@ export function generateSeedData(): { projects: Project[]; tasks: Task[]; links:
       colorTheme: 'emerald',
       status: 'active',
       position: posNeural,
+      notes: `# Neural Mesh Directives
+- Ensure all dependency additions run Depth-First Search for cycle detection before committing.
+- Dynamic Bezier offsets animate based on delta time.`,
+      targetDate: now + 86400000 * 30,
       createdAt: now - 86400000 * 7,
       updatedAt: now,
     },
@@ -55,6 +89,11 @@ export function generateSeedData(): { projects: Project[]; tasks: Task[]; links:
       colorTheme: 'rose',
       status: 'active',
       position: posDesign,
+      notes: `# Design Tokens & Philosophy
+- Midnight Void: #030308.
+- Violet: #8b5cf6, Cyan: #06b6d4.
+- Glass panels must utilize backdrop blur >= 16px.`,
+      targetDate: now + 86400000 * 18,
       createdAt: now - 86400000 * 5,
       updatedAt: now,
     },
@@ -65,32 +104,42 @@ export function generateSeedData(): { projects: Project[]; tasks: Task[]; links:
       colorTheme: 'amber',
       status: 'active',
       position: posCloud,
+      notes: `# Storage Vault Strategy
+- IndexedDB via idb-keyval.
+- Partialize: projects, tasks, links, milestones, settings.`,
+      targetDate: now + 86400000 * 45,
       createdAt: now - 86400000 * 3,
       updatedAt: now,
     },
   ];
 
+  // Tasks with dependency links
+  const t1 = createId();
+  const t2 = createId();
+  const t3 = createId();
+  const t4 = createId();
+
   const tasks: Task[] = [
     // Quantum Core tasks
-    { id: createId(), projectId: idQuantum, title: 'Compile Custom Atmospheric Shader', description: 'Vertex displacement and Fresnel edge rim lighting.', status: 'done', priority: 'critical', dueDate: now - 86400000 * 2, orbitIndex: 0, createdAt: now - 86400000 * 10, updatedAt: now },
-    { id: createId(), projectId: idQuantum, title: 'Optimize Instanced Starfield (2k stars)', description: 'Single draw-call matrix buffer with twinkling particles.', status: 'in_progress', priority: 'high', dueDate: now + 86400000 * 2, orbitIndex: 1, createdAt: now - 86400000 * 8, updatedAt: now },
-    { id: createId(), projectId: idQuantum, title: 'Camera Bezier Slerp Interpolation', description: 'Smooth camera glide framing selected planetary coordinates.', status: 'todo', priority: 'medium', dueDate: now + 86400000 * 5, orbitIndex: 2, createdAt: now - 86400000 * 5, updatedAt: now },
-    { id: createId(), projectId: idQuantum, title: 'Frame Rate Profiling & Budgeting', description: 'Ensure stable 60 FPS across mid-tier GPUs.', status: 'todo', priority: 'low', dueDate: null, orbitIndex: 3, createdAt: now - 86400000 * 3, updatedAt: now },
+    { id: t1, projectId: idQuantum, title: 'Compile Custom Atmospheric Shader', description: 'Vertex displacement and Fresnel edge rim lighting.', status: 'done', priority: 'critical', dueDate: now - 86400000 * 2, orbitIndex: 0, milestoneId: m2, createdAt: now - 86400000 * 10, updatedAt: now },
+    { id: t2, projectId: idQuantum, title: 'Optimize Instanced Starfield (2k stars)', description: 'Single draw-call matrix buffer with twinkling particles.', status: 'in_progress', priority: 'high', dueDate: now + 86400000 * 2, orbitIndex: 1, dependsOnTaskId: t1, milestoneId: m1, createdAt: now - 86400000 * 8, updatedAt: now },
+    { id: t3, projectId: idQuantum, title: 'Camera Bezier Slerp Interpolation', description: 'Smooth camera glide framing selected planetary coordinates.', status: 'todo', priority: 'medium', dueDate: now + 86400000 * 5, orbitIndex: 2, dependsOnTaskId: t2, milestoneId: m1, createdAt: now - 86400000 * 5, updatedAt: now },
+    { id: t4, projectId: idQuantum, title: 'Frame Rate Profiling & Budgeting', description: 'Ensure stable 60 FPS across mid-tier GPUs.', status: 'todo', priority: 'low', dueDate: null, orbitIndex: 3, createdAt: now - 86400000 * 3, updatedAt: now },
 
     // Mobile tasks
-    { id: createId(), projectId: idMobile, title: 'Touch Pinch-to-Zoom Gesture', description: 'Calibrate sensitivity for mobile touchscreens.', status: 'in_progress', priority: 'critical', dueDate: now + 86400000 * 1, orbitIndex: 0, createdAt: now - 86400000 * 6, updatedAt: now },
-    { id: createId(), projectId: idMobile, title: 'Responsive Bottom Sheet Drawer', description: 'Full-width task management on screens under 768px.', status: 'done', priority: 'high', dueDate: now - 86400000 * 1, orbitIndex: 1, createdAt: now - 86400000 * 5, updatedAt: now },
+    { id: createId(), projectId: idMobile, title: 'Touch Pinch-to-Zoom Gesture', description: 'Calibrate sensitivity for mobile touchscreens.', status: 'in_progress', priority: 'critical', dueDate: now + 86400000 * 1, orbitIndex: 0, milestoneId: m3, createdAt: now - 86400000 * 6, updatedAt: now },
+    { id: createId(), projectId: idMobile, title: 'Responsive Bottom Sheet Drawer', description: 'Full-width task management on screens under 768px.', status: 'done', priority: 'high', dueDate: now - 86400000 * 1, orbitIndex: 1, milestoneId: m3, createdAt: now - 86400000 * 5, updatedAt: now },
     { id: createId(), projectId: idMobile, title: 'Hardware DPR Adaptive Throttling', description: 'Cap DPR at 1.5 on low-power devices.', status: 'todo', priority: 'medium', dueDate: now + 86400000 * 7, orbitIndex: 2, createdAt: now - 86400000 * 3, updatedAt: now },
 
     // Neural API tasks
-    { id: createId(), projectId: idNeural, title: 'DFS Graph Cycle Detection', description: 'Prevent circular dependency links in project topology.', status: 'done', priority: 'critical', dueDate: now - 86400000 * 3, orbitIndex: 0, createdAt: now - 86400000 * 7, updatedAt: now },
+    { id: createId(), projectId: idNeural, title: 'DFS Graph Cycle Detection', description: 'Prevent circular dependency links in project topology.', status: 'done', priority: 'critical', dueDate: now - 86400000 * 3, orbitIndex: 0, milestoneId: m4, createdAt: now - 86400000 * 7, updatedAt: now },
     { id: createId(), projectId: idNeural, title: 'Dynamic Quadratic Bezier Conduits', description: 'Animate dashed line offset connecting dependent worlds.', status: 'in_progress', priority: 'high', dueDate: now + 86400000 * 4, orbitIndex: 1, createdAt: now - 86400000 * 4, updatedAt: now },
     { id: createId(), projectId: idNeural, title: 'Dependency Telemetry Metrics', description: 'Show upstream and downstream dependency counts in drawer.', status: 'todo', priority: 'low', dueDate: null, orbitIndex: 2, createdAt: now - 86400000 * 2, updatedAt: now },
 
     // Cosmic Design tasks
     { id: createId(), projectId: idDesign, title: 'Space Grotesk & Inter Pairing', description: 'Implement typographic scale and display headings.', status: 'done', priority: 'high', dueDate: now - 86400000 * 1, orbitIndex: 0, createdAt: now - 86400000 * 4, updatedAt: now },
-    { id: createId(), projectId: idDesign, title: 'Glassmorphism Blur & Rim Lighting', description: 'Calibrate subtle backdrop filter and frosted border tokens.', status: 'in_progress', priority: 'medium', dueDate: now + 86400000 * 3, orbitIndex: 1, createdAt: now - 86400000 * 3, updatedAt: now },
-    { id: createId(), projectId: idDesign, title: 'Accessible Contrast Calibration', description: 'Ensure all HUD typography meets WCAG AA 4.5:1 ratio.', status: 'todo', priority: 'critical', dueDate: now + 86400000 * 6, orbitIndex: 2, createdAt: now - 86400000 * 2, updatedAt: now },
+    { id: createId(), projectId: idDesign, title: 'Glassmorphism Blur & Rim Lighting', description: 'Calibrate subtle backdrop filter and frosted border tokens.', status: 'in_progress', priority: 'medium', dueDate: now + 86400000 * 3, orbitIndex: 1, milestoneId: m5, createdAt: now - 86400000 * 3, updatedAt: now },
+    { id: createId(), projectId: idDesign, title: 'Accessible Contrast Calibration', description: 'Ensure all HUD typography meets WCAG AA 4.5:1 ratio.', status: 'todo', priority: 'critical', dueDate: now + 86400000 * 6, orbitIndex: 2, milestoneId: m5, createdAt: now - 86400000 * 2, updatedAt: now },
 
     // Cloud Infrastructure tasks
     { id: createId(), projectId: idCloud, title: 'IndexedDB Key-Val Persistence', description: 'Auto-save projects, tasks, and dependency links offline.', status: 'done', priority: 'critical', dueDate: now - 86400000 * 2, orbitIndex: 0, createdAt: now - 86400000 * 3, updatedAt: now },
@@ -105,5 +154,5 @@ export function generateSeedData(): { projects: Project[]; tasks: Task[]; links:
     { id: createId(), sourceProjectId: idCloud, targetProjectId: idQuantum, createdAt: now - 86400000 * 1 },
   ];
 
-  return { projects, tasks, links };
+  return { projects, tasks, links, milestones };
 }

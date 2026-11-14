@@ -3,6 +3,15 @@ export type TaskStatus = 'todo' | 'in_progress' | 'done';
 export type TaskPriority = 'low' | 'medium' | 'high' | 'critical';
 export type ColorTheme = 'violet' | 'cyan' | 'rose' | 'amber' | 'emerald' | 'blue' | 'orange' | 'teal';
 
+export interface Milestone {
+  id: string;
+  projectId: string;
+  title: string;
+  dueDate: number | null;
+  completed: boolean;
+  createdAt: number;
+}
+
 export interface Project {
   id: string;
   name: string;
@@ -10,6 +19,8 @@ export interface Project {
   colorTheme: ColorTheme;
   status: ProjectStatus;
   position: [number, number, number];
+  notes?: string;
+  targetDate?: number | null;
   createdAt: number;
   updatedAt: number;
 }
@@ -23,6 +34,8 @@ export interface Task {
   priority: TaskPriority;
   dueDate: number | null;
   orbitIndex: number;
+  dependsOnTaskId?: string | null;
+  milestoneId?: string | null;
   createdAt: number;
   updatedAt: number;
 }
@@ -38,7 +51,7 @@ export interface UIState {
   selectedProjectId: string | null;
   hoveredProjectId: string | null;
   panelOpen: boolean;
-  panelView: 'tasks' | 'settings' | 'dependencies';
+  panelView: 'overview' | 'tasks' | 'milestones' | 'notes' | 'dependencies' | 'settings';
   contextMenu: { x: number; y: number; targetId?: string } | null;
   cameraTarget: [number, number, number];
   editingTaskId: string | null;

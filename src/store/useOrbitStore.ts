@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { get as idbGet, set as idbSet, del as idbDel } from 'idb-keyval';
-import type { Project, Task, DependencyLink, UIState, AppSettings } from '../types';
+import type { Project, Task, DependencyLink, Milestone, UIState, AppSettings } from '../types';
 import { createId } from '../utils/id';
 import { generateSeedData } from '../utils/seed';
 
@@ -9,18 +9,33 @@ interface OrbitStore {
   projects: Record<string, Project>;
   tasks: Record<string, Task>;
   links: Record<string, DependencyLink>;
+  milestones: Record<string, Milestone>;
   settings: AppSettings;
   ui: UIState;
 
+  // Project Actions
   createProject: (data: Omit<Project, 'id' | 'createdAt' | 'updatedAt'>) => string;
   updateProject: (id: string, patch: Partial<Project>) => void;
   deleteProject: (id: string) => void;
+
+  // Task Actions
   createTask: (data: Omit<Task, 'id' | 'createdAt' | 'updatedAt' | 'orbitIndex'>) => string;
   updateTask: (id: string, patch: Partial<Task>) => void;
   deleteTask: (id: string) => void;
   cycleTaskStatus: (id: string) => void;
+  toggleTaskComplete: (id: string) => void;
+
+  // Milestone Actions
+  createMilestone: (data: Omit<Milestone, 'id' | 'createdAt'>) => string;
+  updateMilestone: (id: string, patch: Partial<Milestone>) => void;
+  toggleMilestone: (id: string) => void;
+  deleteMilestone: (id: string) => void;
+
+  // Dependency Actions
   createLink: (sourceId: string, targetId: string) => string | null;
   deleteLink: (id: string) => void;
+
+  // UI Actions
   selectProject: (id: string | null) => void;
   hoverProject: (id: string | null) => void;
   openPanel: (view?: UIState['panelView']) => void;
@@ -34,7 +49,7 @@ const defaultUI: UIState = {
   selectedProjectId: null,
   hoveredProjectId: null,
   panelOpen: false,
-  panelView: 'tasks',
+  panelView: 'overview',
   contextMenu: null,
   cameraTarget: [0, 0, 0],
   editingTaskId: null,
@@ -83,6 +98,7 @@ export const useOrbitStore = create<OrbitStore>()(
       projects: {},
       tasks: {},
       links: {},
+      milestones: {},
       settings: defaultSettings,
       ui: defaultUI,
 
@@ -108,18 +124,27 @@ export const useOrbitStore = create<OrbitStore>()(
         set((s) => {
           const projects = { ...s.projects };
           delete projects[id];
+
           const tasks: Record<string, Task> = {};
           for (const [tid, task] of Object.entries(s.tasks)) {
             if (task.projectId !== id) tasks[tid] = task;
           }
+
           const links: Record<string, DependencyLink> = {};
           for (const [lid, link] of Object.entries(s.links)) {
             if (link.sourceProjectId !== id && link.targetProjectId !== id) links[lid] = link;
           }
+
+          const milestones: Record<string, Milestone> = {};
+          for (const [mid, milestone] of Object.entries(s.milestones)) {
+            if (milestone.projectId !== id) milestones[mid] = milestone;
+          }
+
           return {
             projects,
             tasks,
             links,
+            milestones,
             ui: s.ui.selectedProjectId === id ? { ...s.ui, selectedProjectId: null, panelOpen: false } : s.ui,
           };
         });
@@ -160,6 +185,51 @@ export const useOrbitStore = create<OrbitStore>()(
         });
       },
 
+      toggleTaskComplete: (id) => {
+        set((s) => {
+          const task = s.tasks[id];
+          if (!task) return s;
+          const nextStatus: Task['status'] = task.status === 'done' ? 'todo' : 'done';
+          return { tasks: { ...s.tasks, [id]: { ...task, status: nextStatus, updatedAt: Date.now() } } };
+        });
+      },
+
+      createMilestone: (data) => {
+        const id = createId();
+        const milestone: Milestone = { ...data, id, createdAt: Date.now() };
+        set((s) => ({ milestones: { ...s.milestones, [id]: milestone } }));
+        return id;
+      },
+
+      updateMilestone: (id, patch) => {
+        set((s) => {
+          const existing = s.milestones[id];
+          if (!existing) return s;
+          return { milestones: { ...s.milestones, [id]: { ...existing, ...patch } } };
+        });
+      },
+
+      toggleMilestone: (id) => {
+        set((s) => {
+          const milestone = s.milestones[id];
+          if (!milestone) return s;
+          return {
+            milestones: {
+              ...s.milestones,
+              [id]: { ...milestone, completed: !milestone.completed },
+            },
+          };
+        });
+      },
+
+      deleteMilestone: (id) => {
+        set((s) => {
+          const milestones = { ...s.milestones };
+          delete milestones[id];
+          return { milestones };
+        });
+      },
+
       createLink: (sourceId, targetId) => {
         if (sourceId === targetId) return null;
         const state = get();
@@ -188,7 +258,7 @@ export const useOrbitStore = create<OrbitStore>()(
             ...s.ui,
             selectedProjectId: id,
             panelOpen: id !== null,
-            panelView: id !== null ? 'tasks' : s.ui.panelView,
+            panelView: id !== null ? (s.ui.panelView || 'overview') : s.ui.panelView,
             editingTaskId: null,
           },
         }));
@@ -225,12 +295,13 @@ export const useOrbitStore = create<OrbitStore>()(
         projects: state.projects,
         tasks: state.tasks,
         links: state.links,
+        milestones: state.milestones,
         settings: state.settings,
       }),
-      version: 1,
+      version: 2,
       onRehydrateStorage: () => {
         return (state) => {
-          if (state && Object.keys(state.projects).length === 0) {
+          if (state && (!state.projects || Object.keys(state.projects).length === 0)) {
             const seed = generateSeedData();
             const projects: Record<string, Project> = {};
             for (const p of seed.projects) projects[p.id] = p;
@@ -238,11 +309,15 @@ export const useOrbitStore = create<OrbitStore>()(
             for (const t of seed.tasks) tasks[t.id] = t;
             const links: Record<string, DependencyLink> = {};
             for (const l of seed.links) links[l.id] = l;
+            const milestones: Record<string, Milestone> = {};
+            for (const m of seed.milestones) milestones[m.id] = m;
+
             state.projects = projects;
             state.tasks = tasks;
             state.links = links;
+            state.milestones = milestones;
             state.settings = { ...state.settings, onboardingComplete: false };
-            useOrbitStore.setState({ projects, tasks, links, settings: state.settings });
+            useOrbitStore.setState({ projects, tasks, links, milestones, settings: state.settings });
           }
         };
       },
@@ -252,3 +327,6 @@ export const useOrbitStore = create<OrbitStore>()(
 
 export const useProjectTasks = (projectId: string) =>
   useOrbitStore((s) => Object.values(s.tasks).filter((t) => t.projectId === projectId));
+
+export const useProjectMilestones = (projectId: string) =>
+  useOrbitStore((s) => Object.values(s.milestones).filter((m) => m.projectId === projectId));

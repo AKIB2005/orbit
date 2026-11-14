@@ -3,6 +3,7 @@ import { TopBar } from './TopBar';
 import { SlidePanel } from './SlidePanel';
 import { ContextMenu } from './ContextMenu';
 import { CreateProjectDialog } from './CreateProjectDialog';
+import { ConstellationNavigator } from './ConstellationNavigator';
 
 interface UIOverlayProps {
   onReturnToLanding?: () => void;
@@ -13,6 +14,7 @@ export const UIOverlay = memo(function UIOverlay({ onReturnToLanding }: UIOverla
     <div className="absolute inset-0 z-10 pointer-events-none">
       <TopBar onReturnToLanding={onReturnToLanding} />
       <SlidePanel />
+      <ConstellationNavigator />
       <ContextMenu />
       <CreateProjectDialog />
     </div>
