@@ -13,18 +13,22 @@ export const CosmicRadar2D = memo(function CosmicRadar2D() {
   // Center coordinate of SVG viewBox [0..800, 0..800]
   const cx = 400;
   const cy = 400;
-  const scale = 8.5; // Scale orbital units to SVG pixels
+  // Fit the outermost orbit inside the viewBox (leaving room for labels), so few planets aren't tiny
+  // and twelve still fit. Capped so a single planet doesn't balloon.
+  const outer = getOrbitalParameters(Math.max(projectList.length - 1, 0)).semiMajor;
+  const scale = Math.min(20, 340 / outer);
 
   return (
     <div className="w-full h-full relative flex items-center justify-center overflow-hidden bg-[#030308] select-none p-4">
       {/* 2D Mode Indicator Pill */}
-      <div className="absolute top-20 left-6 z-10 px-3 py-1 rounded-full bg-white/[0.03] border border-white/[0.08] text-[11px] font-mono text-slate-400 flex items-center gap-2 pointer-events-auto">
-        <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
-        <span>2D Cosmic Radar Active</span>
+      <div className="absolute top-[max(4.25rem,calc(env(safe-area-inset-top)+3.75rem))] left-3 sm:left-5 z-10 chip pointer-events-none">
+        <span>2D radar view</span>
       </div>
 
       <svg
         viewBox="0 0 800 800"
+        role="group"
+        aria-label="2D radar of your planets. Each planet is a button."
         className="w-full h-full max-w-[850px] max-h-[850px] overflow-visible"
       >
         <defs>
@@ -60,7 +64,7 @@ export const CosmicRadar2D = memo(function CosmicRadar2D() {
           const planetY = cy + pz * scale;
 
           return (
-            <g key={project.id} className="cursor-pointer group">
+            <g key={project.id} className="group">
               {/* Elliptical Track */}
               <ellipse
                 cx={cx}
@@ -112,8 +116,19 @@ export const CosmicRadar2D = memo(function CosmicRadar2D() {
                 cy={planetY}
                 r="11"
                 fill={theme.primary}
+                role="button"
+                tabIndex={0}
+                aria-pressed={isSelected}
+                aria-label={`${project.name}, ${projectTasks.length} ${projectTasks.length === 1 ? 'task' : 'tasks'}`}
                 onClick={() => selectProject(isSelected ? null : project.id)}
-                className="transition-transform duration-300 group-hover:scale-125"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    selectProject(isSelected ? null : project.id);
+                  }
+                }}
+                // transform-box makes the hover scale pivot on the planet, not the SVG origin
+                className="cursor-pointer [transform-box:fill-box] origin-center transition-transform duration-[var(--dur-base)] ease-[var(--ease-out)] group-hover:scale-125 focus-visible:scale-125"
                 style={{
                   filter: isSelected ? `drop-shadow(0 0 10px ${theme.primary})` : 'none',
                 }}
@@ -135,8 +150,8 @@ export const CosmicRadar2D = memo(function CosmicRadar2D() {
                 y={planetY + 22}
                 textAnchor="middle"
                 fill="#f8fafc"
-                fontSize="11"
-                fontFamily="Space Grotesk, sans-serif"
+                fontSize="13"
+                fontFamily="Inter, system-ui, sans-serif"
                 fontWeight={isSelected ? '600' : '400'}
                 className="pointer-events-none transition-colors"
               >
@@ -144,14 +159,14 @@ export const CosmicRadar2D = memo(function CosmicRadar2D() {
               </text>
               <text
                 x={planetX}
-                y={planetY + 34}
+                y={planetY + 36}
                 textAnchor="middle"
-                fill={isSelected ? '#22d3ee' : '#64748b'}
-                fontSize="9"
-                fontFamily="JetBrains Mono, monospace"
+                fill={isSelected ? '#7dd3fc' : '#94a3b8'}
+                fontSize="11"
+                fontFamily="Inter, system-ui, sans-serif"
                 className="pointer-events-none"
               >
-                {projectTasks.length} TASKS
+                {projectTasks.length} {projectTasks.length === 1 ? 'task' : 'tasks'}
               </text>
             </g>
           );

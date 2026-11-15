@@ -16,6 +16,12 @@ const readHash = (): View => (window.location.hash === '#workspace' ? 'workspace
 export default function App() {
   const [view, setView] = useState<View>(() => (typeof window === 'undefined' ? 'landing' : readHash()));
   const viewMode = useOrbitStore((s) => s.ui.viewMode);
+  const selectedName = useOrbitStore((s) => (s.ui.selectedProjectId ? s.projects[s.ui.selectedProjectId]?.name : undefined));
+
+  // Keep the tab title meaningful for history, bookmarks and screen readers
+  useEffect(() => {
+    document.title = view === 'landing' ? 'ORBIT: Your universe. Your workflow. Your gravity.' : selectedName ? `${selectedName} · ORBIT` : 'Workspace · ORBIT';
+  }, [view, selectedName]);
 
   useEffect(() => {
     // Keep the existing #workspace / #landing hash contract; in-page anchors (#paradigm…) are ignored.
@@ -23,6 +29,7 @@ export default function App() {
       const h = window.location.hash;
       if (h === '#workspace') setView('workspace');
       else if (h === '#landing' || !h) setView('landing');
+      // any other hash (#main, #paradigm…) is an in-page anchor and leaves the view unchanged
     };
     window.addEventListener('hashchange', onHash);
     return () => window.removeEventListener('hashchange', onHash);

@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { useOrbitStore } from '../store/useOrbitStore';
 import { TaskCard } from './TaskCard';
 import { CreateTaskForm } from './CreateTaskForm';
+import { listRow } from '../motion/tokens';
 import { EmptyState } from './common/EmptyState';
 import { Icon } from './ui/Icon';
 
@@ -117,7 +118,7 @@ export const TaskList = memo(function TaskList({ projectId }: TaskListProps) {
           <EmptyState
             compact
             title="No tasks yet"
-            description="Add your first task above. Each one becomes a satellite orbiting this planet."
+            description="Add your first task above. Each one becomes a satellite orbiting this planet in the 3D view."
           />
         ) : (
           <EmptyState
@@ -132,22 +133,16 @@ export const TaskList = memo(function TaskList({ projectId }: TaskListProps) {
           />
         )
       ) : (
-        <AnimatePresence mode="popLayout">
-          <div className="space-y-2.5">
+        <div className="space-y-2.5">
+          {/* AnimatePresence must wrap the rows directly, or exit animations never run */}
+          <AnimatePresence mode="popLayout" initial={false}>
             {filteredTasks.map((task) => (
-              <motion.div
-                key={task.id}
-                layout
-                initial={{ opacity: 0, y: -8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, x: 40, transition: { duration: 0.15 } }}
-                transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-              >
+              <motion.div key={task.id} layout variants={listRow} initial="hidden" animate="visible" exit="exit">
                 <TaskCard taskId={task.id} />
               </motion.div>
             ))}
-          </div>
-        </AnimatePresence>
+          </AnimatePresence>
+        </div>
       )}
     </div>
   );

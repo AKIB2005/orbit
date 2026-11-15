@@ -1,7 +1,7 @@
 import { memo, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Icon } from './ui/Icon';
-import { ease } from '../motion/tokens';
+import { collapse } from '../motion/tokens';
 import { useOrbitStore } from '../store/useOrbitStore';
 import { PRIORITY_COLORS } from '../types';
 import { TaskDetail } from './TaskDetail';
@@ -59,7 +59,9 @@ export const TaskCard = memo(function TaskCard({ taskId }: TaskCardProps) {
               ? 'bg-emerald-500 border-emerald-400 text-black font-bold shadow-[0_0_8px_#34d399]'
               : 'border-white/20 hover:border-cyan-400 bg-black/40'
             }`}
-          aria-label={task.status === 'done' ? 'Mark task as incomplete' : 'Mark task as complete'}
+          role="checkbox"
+          aria-checked={task.status === 'done'}
+          aria-label={task.title}
         >
           {task.status === 'done' && (
             <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3}>
@@ -85,7 +87,8 @@ export const TaskCard = memo(function TaskCard({ taskId }: TaskCardProps) {
             <button
               onClick={() => cycleTaskStatus(taskId)}
               className={`text-[11px] px-2 py-0.5 rounded-full font-medium border transition-colors ${STATUS_STYLES[task.status]}`}
-              title="Click to cycle status"
+              aria-label={`Status: ${STATUS_LABELS[task.status]}. Activate to change.`}
+              title="Change status"
             >
               {STATUS_LABELS[task.status]}
             </button>
@@ -152,14 +155,7 @@ export const TaskCard = memo(function TaskCard({ taskId }: TaskCardProps) {
       {/* Expanded Inline Detail Editor */}
       <AnimatePresence initial={false}>
         {expanded && (
-          <motion.div
-            key="detail"
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.24, ease: ease.out }}
-            className="overflow-hidden"
-          >
+          <motion.div key="detail" variants={collapse} initial="hidden" animate="visible" exit="exit" className="overflow-hidden">
             <TaskDetail taskId={taskId} />
           </motion.div>
         )}

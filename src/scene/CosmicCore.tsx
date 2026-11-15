@@ -1,9 +1,11 @@
 import { useRef, memo } from 'react';
+import { useQuality } from './quality';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useOrbitStore } from '../store/useOrbitStore';
 
 export const CosmicCore = memo(function CosmicCore() {
+  const q = useQuality();
   const coreRef = useRef<THREE.Mesh>(null);
   const coronaRef = useRef<THREE.Mesh>(null);
   const outerHaloRef = useRef<THREE.Mesh>(null);
@@ -52,7 +54,7 @@ export const CosmicCore = memo(function CosmicCore() {
     <group position={[0, 0, 0]}>
       {/* Central Singularity Sphere */}
       <mesh ref={coreRef}>
-        <sphereGeometry args={[1.35, 64, 64]} />
+        <sphereGeometry args={[1.35, q.coreSegments, q.coreSegments]} />
         <meshStandardMaterial
           color="#38bdf8"
           emissive="#818cf8"
@@ -106,13 +108,15 @@ export const CosmicCore = memo(function CosmicCore() {
         distance={45}
         decay={1.2}
       />
-      <pointLight
-        color="#38bdf8"
-        intensity={2.0}
-        distance={25}
-        decay={1.5}
-        position={[0, 0.5, 0]}
-      />
+      {q.fullLighting && (
+        <pointLight
+          color="#38bdf8"
+          intensity={2.0}
+          distance={25}
+          decay={1.5}
+          position={[0, 0.5, 0]}
+        />
+      )}
     </group>
   );
 });

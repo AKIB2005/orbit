@@ -274,7 +274,7 @@ export const AICommandCenter = memo(function AICommandCenter() {
         {isLoading && (
           <div className="flex items-center gap-1.5 px-4 py-3 rounded-2xl rounded-bl-md bg-white/[0.04] border border-white/[0.07] w-fit" role="status" aria-label="ORBIT is thinking">
             {[0, 1, 2].map((i) => (
-              <span key={i} className="w-1.5 h-1.5 rounded-full bg-slate-400 animate-bounce" style={{ animationDelay: `${i * 120}ms` }} />
+              <span key={i} className="typing-dot w-1.5 h-1.5 rounded-full bg-slate-400" style={{ animationDelay: `${i * 160}ms` }} />
             ))}
           </div>
         )}

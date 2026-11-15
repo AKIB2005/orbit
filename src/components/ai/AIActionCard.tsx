@@ -22,7 +22,7 @@ export const AIActionCard = memo(function AIActionCard({
       case 'create_task':
         return { label: 'Add task', color: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/30' };
       case 'update_task_priority':
-        return { label: 'Change priority', color: 'bg-violet-500/20 text-violet-300 border-violet-500/30' };
+        return { label: 'Change priority', color: 'bg-white/[0.08] text-slate-200 border-white/[0.15]' };
       case 'schedule_task':
         return { label: 'Set due date', color: 'bg-amber-500/20 text-amber-300 border-amber-500/30' };
       case 'create_project':

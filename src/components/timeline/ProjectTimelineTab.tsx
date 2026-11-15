@@ -86,9 +86,9 @@ export const ProjectTimelineTab = memo(function ProjectTimelineTab({ projectId }
   if (tasks.length === 0 && milestones.length === 0) {
     return (
       <EmptyState
-        title="Orbital Chronology Empty"
-        description="No milestones or task horizons have been scheduled for this celestial world."
-        actionLabel="Deploy Tasks & Horizons"
+        title="Nothing scheduled yet"
+        description="Add due dates to tasks or create milestones and they’ll appear here in date order."
+        actionLabel="Go to tasks"
         onAction={() => openPanel('tasks')}
       />
     );
@@ -126,7 +126,7 @@ export const ProjectTimelineTab = memo(function ProjectTimelineTab({ projectId }
         </div>
 
         <span className="text-[11px] text-slate-500 hidden sm:inline">
-          Chronological Vector
+          Date order
         </span>
       </div>
 
@@ -146,7 +146,7 @@ export const ProjectTimelineTab = memo(function ProjectTimelineTab({ projectId }
                     : isOverdue
                     ? 'bg-red-400 border-[#030308] shadow-[0_0_8px_#f87171]'
                     : isMilestone
-                    ? 'bg-violet-400 border-[#030308]'
+                    ? 'bg-starlight border-[#030308]'
                     : 'bg-slate-500 border-[#030308]'
                 }`}
               />
@@ -178,18 +178,18 @@ export const ProjectTimelineTab = memo(function ProjectTimelineTab({ projectId }
                         <span
                           className={`text-[11px] px-1.5 py-0.2 rounded-full  ${
                             isMilestone
-                              ? 'bg-violet-500/20 text-violet-300 border border-violet-500/30'
+                              ? 'bg-white/[0.08] text-slate-200 border border-white/[0.15]'
                               : 'bg-white/[0.04] text-slate-400'
                           }`}
                         >
                           {isMilestone ? 'Milestone' : 'Task'}
                         </span>
-                        {!isMilestone && (
+                        {item.type === 'task' && (
                           <span
                             className="text-[11px] font-bold"
-                            style={{ color: PRIORITY_COLORS[(item as any).priority as keyof typeof PRIORITY_COLORS] }}
+                            style={{ color: PRIORITY_COLORS[item.priority as keyof typeof PRIORITY_COLORS] }}
                           >
-                            {(item as any).priority}
+                            <span className="capitalize">{item.priority}</span>
                           </span>
                         )}
                       </div>

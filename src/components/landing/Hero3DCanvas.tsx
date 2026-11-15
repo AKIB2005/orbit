@@ -149,6 +149,14 @@ const SatelliteOrbit = memo(function SatelliteOrbit({ sat }: { sat: SatelliteDat
   );
   const lineObject = useMemo(() => new THREE.Line(geometry, material), [geometry, material]);
 
+  useEffect(
+    () => () => {
+      geometry.dispose();
+      material.dispose();
+    },
+    [geometry, material]
+  );
+
   useFrame((_, delta) => {
     if (motionState.reduced) return;
     angleRef.current += delta * sat.speed;

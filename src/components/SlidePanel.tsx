@@ -12,6 +12,7 @@ import { ProjectSettings } from './ProjectSettings';
 import { ProjectInsightsTab } from './insights/ProjectInsightsTab';
 import { ProjectTimelineTab } from './timeline/ProjectTimelineTab';
 import { useMediaQuery } from '../motion/useMediaQuery';
+import { SIDE_PANEL_QUERY, SIDE_PANEL_WIDTH } from './ui/layout';
 import { fade, spring, tabSwap } from '../motion/tokens';
 
 export const SlidePanel = memo(function SlidePanel() {
@@ -22,7 +23,7 @@ export const SlidePanel = memo(function SlidePanel() {
   const closePanel = useOrbitStore((s) => s.closePanel);
 
   const [isExpanded, setIsExpanded] = useState(false);
-  const isDesktop = useMediaQuery('(min-width: 640px)');
+  const isDesktop = useMediaQuery(SIDE_PANEL_QUERY);
   const dragControls = useDragControls();
   const panelRef = useRef<HTMLElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -44,8 +45,23 @@ export const SlidePanel = memo(function SlidePanel() {
       wasOpen.current = true;
       return () => cancelAnimationFrame(id);
     }
-    if (!panelOpen) wasOpen.current = false;
+    if (!panelOpen && wasOpen.current) {
+      wasOpen.current = false;
+      // Closing from inside the panel (Esc, close button): hand focus back to the planet list
+      // instead of dropping it on <body>. The panel stays mounted during its exit animation.
+      if (panelRef.current?.contains(document.activeElement)) {
+        const id = lastId.current;
+        document
+          .querySelector<HTMLElement>(id ? `nav[aria-label="Planets"] [data-id="${id}"]` : 'nav[aria-label="Planets"] button')
+          ?.focus({ preventScroll: true });
+      }
+    }
   }, [panelOpen]);
+
+  const lastId = useRef<string | null>(null);
+  useEffect(() => {
+    if (selectedProjectId) lastId.current = selectedProjectId;
+  }, [selectedProjectId]);
 
   // Switching tabs or planets starts at the top of the new content.
   useEffect(() => {
@@ -112,16 +128,16 @@ export const SlidePanel = memo(function SlidePanel() {
             onDragEnd={(_, info) => {
               if (info.offset.y > 120 || info.velocity.y > 700) closePanel();
             }}
-            style={{ width: isDesktop ? (isExpanded ? 780 : 500) : undefined, transition: 'width 320ms var(--ease-out)', outline: 'none' }}
+            style={{ width: isDesktop ? (isExpanded ? 780 : SIDE_PANEL_WIDTH) : undefined, transition: 'width 320ms var(--ease-out)', outline: 'none' }}
             className="fixed z-40 flex flex-col pointer-events-auto bg-[#07070f]/[0.97] border-white/[0.08] shadow-[0_0_80px_rgba(0,0,0,0.7)] outline-none
               inset-x-0 bottom-0 top-[40dvh] rounded-t-[1.5rem] border-t
-              sm:inset-x-auto sm:right-0 sm:top-0 sm:bottom-0 sm:rounded-none sm:border-t-0 sm:border-l max-w-full"
+              lg:inset-x-auto lg:right-0 lg:top-0 lg:bottom-0 lg:rounded-none lg:border-t-0 lg:border-l max-w-full"
             role="dialog"
             aria-label={projectName ? `${projectName} workspace` : 'Project workspace'}
           >
             {/* Grab handle (phones) */}
             <div
-              className="sm:hidden flex justify-center pt-2.5 pb-1 cursor-grab touch-none"
+              className="lg:hidden flex justify-center pt-2.5 pb-1 cursor-grab touch-none"
               onPointerDown={(e) => dragControls.start(e)}
               aria-hidden="true"
             >
@@ -140,7 +156,7 @@ export const SlidePanel = memo(function SlidePanel() {
               id="workspace-tabpanel"
               role="tabpanel"
               aria-labelledby={`tab-${panelView}`}
-              className="flex-1 overflow-y-auto overscroll-contain p-4 sm:p-5 pb-safe"
+              className="flex-1 overflow-y-auto overscroll-contain p-4 lg:p-5 pb-safe"
             >
               <AnimatePresence mode="wait" initial={false}>
                 <motion.div key={`${selectedProjectId}:${panelView}`} variants={tabSwap} initial="hidden" animate="visible" exit="exit">

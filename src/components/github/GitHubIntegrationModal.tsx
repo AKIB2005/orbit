@@ -91,8 +91,8 @@ export const GitHubIntegrationModal = memo(function GitHubIntegrationModal() {
         setUser(res.user);
         addToast({
           type: 'info',
-          title: 'GitHub Demo Enclave Attached',
-          message: 'Connected mock read-only telemetry pipeline.',
+          title: 'Demo repository connected',
+          message: 'Using sample data in read-only mode.',
         });
       }
     }
@@ -135,7 +135,7 @@ export const GitHubIntegrationModal = memo(function GitHubIntegrationModal() {
     if (count === 0) {
       addToast({
         type: 'info',
-        title: 'Satellites Aligned',
+        title: 'Tasks created',
         message: 'All open GitHub issues are already present as orbiting tasks.',
       });
     }
@@ -172,7 +172,7 @@ export const GitHubIntegrationModal = memo(function GitHubIntegrationModal() {
             <span className="text-slate-400">Access:</span>
             <span className="text-emerald-400 flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_#34d399]" />
-              Zero-Trust // 100% Read-Only Server Enclave
+              Read-only access
             </span>
           </div>
 
@@ -187,11 +187,10 @@ export const GitHubIntegrationModal = memo(function GitHubIntegrationModal() {
 
               <div>
                 <h4 className="font-display font-medium text-base text-white mb-2">
-                  Bind Your Codebase to Celestial Worlds
+                  Connect a repository
                 </h4>
                 <p className="text-xs text-slate-400 max-w-md mx-auto leading-relaxed">
-                  Link GitHub repositories to view live commit telemetry, inspect open pull requests,
-                  and materialize issues as orbiting satellite tasks. Tokens are held securely server-side.
+                  Link a GitHub repository to see recent commits and open pull requests, and turn issues into tasks. Tokens stay on the server.
                 </p>
               </div>
 
@@ -200,7 +199,7 @@ export const GitHubIntegrationModal = memo(function GitHubIntegrationModal() {
                 disabled={loading}
                 className="px-6 py-3 rounded-xl bg-white text-[#05050d] hover:bg-slate-100 font-display font-medium text-xs transition-all shadow-sm cursor-pointer"
               >
-                {loading ? 'Connecting...' : 'Authorize GitHub Enclave'}
+                {loading ? 'Connecting...' : 'Authorize GitHub'}
               </button>
             </div>
           ) : (
@@ -218,7 +217,7 @@ export const GitHubIntegrationModal = memo(function GitHubIntegrationModal() {
                   </div>
                   <div>
                     <span className="text-xs text-slate-300 font-medium">@{user?.login}</span>
-                    <span className="text-[11px] text-slate-500 block">Authenticated Enclave</span>
+                    <span className="text-[11px] text-slate-500 block">Signed in</span>
                   </div>
                 </div>
 
@@ -259,7 +258,7 @@ export const GitHubIntegrationModal = memo(function GitHubIntegrationModal() {
                 </div>
               </div>
 
-              {/* Repo Telemetry Card */}
+              {/* Repository summary */}
               {insights && (
                 <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/[0.06] space-y-4">
                   <div className="flex items-center justify-between">
@@ -291,14 +290,14 @@ export const GitHubIntegrationModal = memo(function GitHubIntegrationModal() {
                   {/* Sync Issues Action */}
                   <div className="flex items-center justify-between pt-1">
                     <span className="text-xs text-slate-400">
-                      Convert issues into satellite tasks:
+                      Turn issues into tasks:
                     </span>
                     <button
                       onClick={handleSyncIssues}
                       disabled={syncingIssues || insights.recentIssues.length === 0}
                       className="px-3.5 py-1.5 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-white text-xs transition-all flex items-center gap-1.5 cursor-pointer"
                     >
-                      <span>{syncingIssues ? 'Deploying...' : 'Deploy Issues to Orbit'}</span>
+                      <span>{syncingIssues ? 'Creating…' : 'Create tasks from issues'}</span>
                       <span aria-hidden="true">·</span>
                     </button>
                   </div>

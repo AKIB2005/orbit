@@ -9,6 +9,7 @@ import { AuthModal } from './auth/AuthModal';
 import { GitHubIntegrationModal } from './github/GitHubIntegrationModal';
 import { ToastContainer } from './common/ToastContainer';
 import { EmptyState } from './common/EmptyState';
+import { SelectionAnnouncer } from './common/SelectionAnnouncer';
 import { useOrbitStore } from '../store/useOrbitStore';
 
 interface UIOverlayProps {
@@ -20,6 +21,7 @@ export const UIOverlay = memo(function UIOverlay({ onReturnToLanding }: UIOverla
   return (
     <div className="absolute inset-0 z-10 pointer-events-none">
       <TopBar onReturnToLanding={onReturnToLanding} />
+      <SelectionAnnouncer />
       {isEmpty && (
         <div className="absolute inset-0 flex items-center justify-center p-6 pointer-events-none">
           <div className="pointer-events-auto max-w-sm w-full sheet-surface rounded-3xl p-2">

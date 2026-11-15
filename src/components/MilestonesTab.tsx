@@ -42,7 +42,7 @@ export const MilestonesTab = memo(function MilestonesTab({ projectId }: Mileston
       {/* Header & Description */}
       <div>
         <h3 className="font-display font-semibold text-base text-white">
-          Orbital Milestones & Stages
+          Milestones
         </h3>
         <p className="text-xs text-slate-400 mt-1">
           Key delivery goals for this project. Link tasks to a milestone to track progress toward it.
@@ -52,7 +52,7 @@ export const MilestonesTab = memo(function MilestonesTab({ projectId }: Mileston
       {/* Create Milestone Form */}
       <form onSubmit={handleAddMilestone} className="glass-panel p-4 rounded-xl border border-white/[0.08] space-y-3">
         <span className="text-[11px] text-slate-400 block">
-          NEW STRATEGIC MILESTONE
+          New milestone
         </span>
         <div className="flex flex-col sm:flex-row gap-2">
           <input
@@ -74,7 +74,7 @@ export const MilestonesTab = memo(function MilestonesTab({ projectId }: Mileston
             disabled={!newTitle.trim()}
             className="px-4 py-1.5 bg-white hover:bg-slate-100 disabled:opacity-40 text-[#05050d] rounded-lg text-xs font-medium transition-colors shadow-sm active:scale-95 cursor-pointer"
           >
-            Add Stage
+            Add milestone
           </button>
         </div>
       </form>

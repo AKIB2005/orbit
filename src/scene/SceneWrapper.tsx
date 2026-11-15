@@ -9,6 +9,9 @@ import { PlanetGroup } from './PlanetGroup';
 import { DependencyArcs } from './DependencyArcs';
 import { useOrbitStore } from '../store/useOrbitStore';
 import { useReducedMotionPreference } from '../motion/useMotionPreference';
+import { QUALITY, QualityContext, detectQualityTier, readDeviceHints, type QualityTier } from './quality';
+import { FrameDemand } from './FrameDemand';
+import { DebugStats } from './DebugStats';
 
 function hasWebGL(): boolean {
   try {
@@ -30,11 +33,25 @@ export const SceneWrapper = memo(function SceneWrapper() {
   const [ready, setReady] = useState(false);
   const [contextLost, setContextLost] = useState(false);
   const [canvasKey, setCanvasKey] = useState(0);
-  // Adaptive resolution: drop to 1x if the frame rate sustains below target, recover when it improves.
-  const lowPower = typeof navigator !== 'undefined' && (navigator.hardwareConcurrency ?? 8) <= 4;
-  const [quality, setQuality] = useState<'high' | 'low'>(lowPower || reduced ? 'low' : 'high');
+  // Quality: start from device hints, demote at runtime if frames drop, never exceed the starting ceiling.
+  const [ceiling] = useState<QualityTier>(() =>
+    detectQualityTier(readDeviceHints(), new URLSearchParams(window.location.search).get('quality'))
+  );
+  // An explicit ?quality=… is a deliberate choice, so it also disables runtime demotion
+  const [locked] = useState(() => ['low', 'high'].includes(new URLSearchParams(window.location.search).get('quality') ?? ''));
+  const [tier, setTier] = useState<QualityTier>(ceiling);
+  const cfg = QUALITY[tier];
 
-  const dpr: [number, number] = quality === 'high' ? [1, 1.75] : [1, 1.1];
+  // Pause rendering entirely while the tab is hidden; resume without a time jump (frame deltas are clamped).
+  const [hidden, setHidden] = useState(() => document.visibilityState === 'hidden');
+  useEffect(() => {
+    const onVis = () => setHidden(document.visibilityState === 'hidden');
+    document.addEventListener('visibilitychange', onVis);
+    return () => document.removeEventListener('visibilitychange', onVis);
+  }, []);
+
+  // Reduced motion means nothing moves on its own, so render on demand instead of 60 times a second.
+  const frameloop = hidden ? 'never' : reduced ? 'demand' : 'always';
 
   const handlePointerDown = (e: React.PointerEvent) => {
     pointerDownPos.current = { x: e.clientX, y: e.clientY };
@@ -97,30 +114,38 @@ export const SceneWrapper = memo(function SceneWrapper() {
 
   return (
     <div
+      role="img"
+      aria-label="Interactive 3D map of your projects. Planets are projects and the small satellites are tasks. Use the planet list at the bottom of the screen, or the bracket keys, to move between planets."
       onContextMenu={handleContextMenu}
       onPointerDown={handlePointerDown}
-      className="absolute inset-0 w-full h-full select-none transition-opacity duration-[900ms] ease-out"
-      style={{ opacity: ready ? 1 : 0 }}
+      className="absolute inset-0 w-full h-full select-none transition-opacity ease-[var(--ease-out)]"
+      style={{ opacity: ready ? 1 : 0, transitionDuration: 'var(--dur-scene)' }}
     >
       <Canvas
         key={canvasKey}
         // Start pulled back; CameraController dollies in once on first load.
         camera={{ position: [0, 22, 42], fov: 48, near: 0.1, far: 160 }}
-        dpr={dpr}
-        gl={{ antialias: true, powerPreference: 'high-performance' }}
+        dpr={cfg.dpr}
+        frameloop={frameloop}
+        gl={{ antialias: QUALITY[ceiling].antialias, powerPreference: ceiling === 'high' ? 'high-performance' : 'default' }}
         style={{ width: '100%', height: '100%' }}
         onPointerMissed={handlePointerMissed}
         onCreated={onCreated}
       >
+        {!locked && (
         <PerformanceMonitor
           flipflops={3}
-          onDecline={() => setQuality('low')}
-          onIncline={() => setQuality('high')}
-          onFallback={() => setQuality('low')}
+          onDecline={() => setTier('low')}
+          onIncline={() => setTier(ceiling)}
+          onFallback={() => setTier('low')}
         />
+        )}
         <color attach="background" args={['#030308']} />
         <fog attach="fog" args={['#030308', 38, 85]} />
 
+        <QualityContext.Provider value={tier}>
+        <FrameDemand />
+        <DebugStats />
         <Suspense fallback={null}>
           <CosmicLighting />
           <CosmicCore />
@@ -129,6 +154,7 @@ export const SceneWrapper = memo(function SceneWrapper() {
           <DependencyArcs />
           <CameraController />
         </Suspense>
+        </QualityContext.Provider>
       </Canvas>
       <div className="scene-vignette" />
     </div>

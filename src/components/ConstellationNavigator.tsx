@@ -3,6 +3,7 @@ import { useShallow } from 'zustand/react/shallow';
 import { useOrbitStore } from '../store/useOrbitStore';
 import { COLOR_THEME_MAP } from '../types';
 import { useMediaQuery } from '../motion/useMediaQuery';
+import { SIDE_PANEL_QUERY, SIDE_PANEL_WIDTH } from './ui/layout';
 
 const isTyping = (t: EventTarget | null) => {
   const el = t as HTMLElement | null;
@@ -23,7 +24,7 @@ export const ConstellationNavigator = memo(function ConstellationNavigator() {
   const panelOpen = useOrbitStore((s) => s.ui.panelOpen);
   const selectProject = useOrbitStore((s) => s.selectProject);
   const navRef = useRef<HTMLElement>(null);
-  const isDesktop = useMediaQuery('(min-width: 640px)');
+  const isDesktop = useMediaQuery(SIDE_PANEL_QUERY);
 
   const projectList = useMemo(() => Object.values(projects), [projects]);
 
@@ -78,7 +79,7 @@ export const ConstellationNavigator = memo(function ConstellationNavigator() {
       ref={navRef}
       aria-label="Planets"
       // Re-centres in the space left of the open panel so it never slides underneath it
-      style={{ left: isDesktop && panelOpen ? 'calc((100% - 500px) / 2)' : '50%', transition: 'left 700ms var(--ease-out), max-width 700ms var(--ease-out)' }}
+      style={{ left: isDesktop && panelOpen ? `calc((100% - ${SIDE_PANEL_WIDTH}px) / 2)` : '50%', transition: 'left 700ms var(--ease-out), max-width 700ms var(--ease-out)' }}
       className="absolute -translate-x-1/2 bottom-safe z-20 pointer-events-auto max-w-[94vw] sm:max-w-[min(56rem,calc(100%-2rem))] overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden p-1.5 glass-panel rounded-2xl"
     >
       <ul className="flex items-center gap-1" role="list">

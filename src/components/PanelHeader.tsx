@@ -68,7 +68,7 @@ export const PanelHeader = memo(function PanelHeader({ projectId, isExpanded, on
             <Icon name="chevronRight" />
           </button>
           <button
-            className="btn-icon hidden sm:inline-flex"
+            className="btn-icon hidden lg:inline-flex"
             onClick={onToggleExpand}
             aria-label={isExpanded ? 'Narrow panel' : 'Widen panel'}
             aria-pressed={isExpanded}

@@ -12,11 +12,12 @@ export const ease = {
   inOut: [0.65, 0, 0.35, 1] as [number, number, number, number],
 };
 
-export const dur = { fast: 0.14, base: 0.24, slow: 0.48, scene: 0.9 };
+export const dur = { fast: 0.14, base: 0.24, slow: 0.48, scene: 0.9, reveal: 1.4 };
 
 export const spring = {
   sheet: { type: 'spring', damping: 32, stiffness: 340, mass: 0.9 } as Transition,
   pop: { type: 'spring', damping: 26, stiffness: 380 } as Transition,
+  tab: { type: 'spring', damping: 30, stiffness: 420 } as Transition,
 };
 
 export const fade: Variants = {
@@ -58,4 +59,18 @@ export const listParent: Variants = {
 export const listItem: Variants = {
   hidden: { opacity: 0, y: 8 },
   visible: { opacity: 1, y: 0, transition: { duration: dur.base, ease: ease.out } },
+};
+
+/** A row in a filtered/sorted list that can enter, leave and re-order. */
+export const listRow: Variants = {
+  hidden: { opacity: 0, y: -8 },
+  visible: { opacity: 1, y: 0, transition: { duration: dur.base, ease: ease.out } },
+  exit: { opacity: 0, x: 32, transition: { duration: dur.fast, ease: ease.inOut } },
+};
+
+/** Height-auto disclosure (expand / collapse in place). */
+export const collapse: Variants = {
+  hidden: { height: 0, opacity: 0 },
+  visible: { height: 'auto', opacity: 1, transition: { duration: dur.base, ease: ease.out } },
+  exit: { height: 0, opacity: 0, transition: { duration: dur.fast, ease: ease.inOut } },
 };

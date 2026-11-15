@@ -2,6 +2,7 @@ import { memo, useMemo, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useOrbitStore } from '../store/useOrbitStore';
 import type { UIState } from '../types';
+import { spring } from '../motion/tokens';
 
 type TabKey = UIState['panelView'];
 
@@ -85,7 +86,7 @@ export const TabBar = memo(function TabBar() {
               <motion.span
                 layoutId="panel-tab-underline"
                 className="absolute inset-x-2 -bottom-px h-[2px] rounded-full bg-starlight"
-                transition={{ type: 'spring', damping: 30, stiffness: 420 }}
+                transition={spring.tab}
               />
             )}
           </button>

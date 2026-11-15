@@ -6,11 +6,11 @@ import gsap from 'gsap';
 import { useOrbitStore } from '../store/useOrbitStore';
 import { activePlanetPositions, getPlanetRadius } from '../utils/orbitalKinematics';
 import { useReducedMotionPreference } from '../motion/useMotionPreference';
+import { SIDE_PANEL_MIN_WIDTH, SIDE_PANEL_WIDTH } from '../components/ui/layout';
 import type { OrbitControls as OrbitControlsType } from 'three-stdlib';
 
 const DEFAULT_POS = new THREE.Vector3(0, 14, 25);
 const DEFAULT_TARGET = new THREE.Vector3(0, 0, 0);
-const PANEL_WIDTH = 500; // px, matches SlidePanel's default sm+ width
 
 /**
  * Camera director.
@@ -23,6 +23,7 @@ const PANEL_WIDTH = 500; // px, matches SlidePanel's default sm+ width
 export function CameraController() {
   const controlsRef = useRef<OrbitControlsType>(null);
   const camera = useThree((s) => s.camera) as THREE.PerspectiveCamera;
+  const invalidate = useThree((s) => s.invalidate);
   const viewportWidth = useThree((s) => s.size.width);
   const viewportHeight = useThree((s) => s.size.height);
 
@@ -96,7 +97,8 @@ export function CameraController() {
     flying.current = true;
     flight.current = gsap.to(state, {
       t: 1,
-      duration: intro ? 2.6 : selectedProjectId ? 1.5 : 1.2,
+      // Longer journeys take slightly longer, so speed feels constant rather than the time
+      duration: intro ? 2.6 : THREE.MathUtils.clamp(0.9 + startCam.distanceTo(DEFAULT_POS) * 0.02 + (selectedProjectId ? 0.3 : 0), 1.1, 1.9),
       ease: intro ? 'power3.out' : 'power3.inOut',
       onUpdate: () => apply(state.t),
       onComplete: () => {
@@ -125,21 +127,23 @@ export function CameraController() {
   }, []);
 
   // ---- Slide the subject clear of the side panel ------------------------------------------
-  // Desktop: slide the planet left of the side panel. Phones: lift it above the bottom sheet.
+  // Desktop: slide the planet left of the side panel. Phones and tablets: lift it above the bottom sheet.
   const hasPanel = !!(panelOpen && selectedProjectId);
-  const wantX = hasPanel && viewportWidth >= 640 ? Math.min(PANEL_WIDTH, viewportWidth * 0.6) / 2 : 0;
-  const wantY = hasPanel && viewportWidth < 640 ? viewportHeight * 0.2 : 0;
+  const wantX = hasPanel && viewportWidth >= SIDE_PANEL_MIN_WIDTH ? Math.min(SIDE_PANEL_WIDTH, viewportWidth * 0.6) / 2 : 0;
+  const wantY = hasPanel && viewportWidth < SIDE_PANEL_MIN_WIDTH ? viewportHeight * 0.2 : 0;
   useEffect(() => {
     shiftTween.current?.kill();
     if (reduced) {
       shift.current.x = wantX;
       shift.current.y = wantY;
+      invalidate();
       return;
     }
-    shiftTween.current = gsap.to(shift.current, { x: wantX, y: wantY, duration: 0.8, ease: 'power3.out' });
+    shiftTween.current = gsap.to(shift.current, { x: wantX, y: wantY, duration: 0.8, ease: 'power3.out', onUpdate: () => invalidate() });
     return () => {
       shiftTween.current?.kill();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [wantX, wantY, reduced]);
 
   useEffect(

@@ -6,7 +6,7 @@ import { InteractivePlanetPreview } from './InteractivePlanetPreview';
 import { TechSpecs } from './TechSpecs';
 import { Footer } from './Footer';
 import { Icon } from '../ui/Icon';
-import { ease } from '../../motion/tokens';
+import { ease, dur } from '../../motion/tokens';
 
 const Hero3DCanvas = lazy(() => import('./Hero3DCanvas').then((m) => ({ default: m.Hero3DCanvas })));
 
@@ -31,9 +31,12 @@ export const LandingPage = memo(function LandingPage({ onEnterOrbit }: LandingPa
 
   return (
     <div className="relative min-h-dvh bg-[#030308] text-slate-100 overflow-x-hidden selection:bg-sky-300/25">
+      <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[80] btn btn-primary">
+        Skip to content
+      </a>
       <Navbar onEnterOrbit={onEnterOrbit} />
 
-      <main>
+      <main id="main" tabIndex={-1} className="outline-none">
         <section className="relative min-h-[100svh] flex items-end md:items-center overflow-hidden">
           {/* Static horizon glow: visible instantly, before WebGL arrives */}
           <div
@@ -45,7 +48,7 @@ export const LandingPage = memo(function LandingPage({ onEnterOrbit }: LandingPa
             className="absolute inset-0"
             initial={{ opacity: 0 }}
             animate={{ opacity: showCanvas ? 1 : 0 }}
-            transition={{ duration: 1.4, ease: ease.out }}
+            transition={{ duration: dur.reveal, ease: ease.out }}
           >
             <Suspense fallback={null}>{showCanvas && <Hero3DCanvas />}</Suspense>
           </motion.div>

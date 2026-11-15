@@ -1,6 +1,7 @@
 import { memo, useMemo } from 'react';
 import { useOrbitStore } from '../../store/useOrbitStore';
 import { EmptyState } from '../common/EmptyState';
+import { Icon } from '../ui/Icon';
 
 interface ProjectInsightsTabProps {
   projectId: string;
@@ -40,6 +41,7 @@ export const ProjectInsightsTab = memo(function ProjectInsightsTab({ projectId }
         overdueCount: 0,
         bottlenecks: [],
         estimatedDaysRemaining: 0,
+        due: { overdue: 0, week: 0, nextWeek: 0, later: 0, none: 0 },
       };
     }
 
@@ -67,24 +69,37 @@ export const ProjectInsightsTab = memo(function ProjectInsightsTab({ projectId }
     // Bottlenecks detection
     const bottlenecks: string[] = [];
     if (overdueCount > 0) {
-      bottlenecks.push(`${overdueCount} task satellite${overdueCount > 1 ? 's have' : ' has'} drifted past their scheduled horizon.`);
+      bottlenecks.push(`${overdueCount} ${overdueCount > 1 ? 'tasks are' : 'task is'} past due.`);
     }
     const criticalPending = tasks.filter((t) => t.priority === 'critical' && t.status === 'todo').length;
     if (criticalPending > 0) {
-      bottlenecks.push(`${criticalPending} critical priority satellite${criticalPending > 1 ? 's are' : ' is'} pending launch.`);
+      bottlenecks.push(`${criticalPending} critical ${criticalPending > 1 ? 'tasks haven’t' : 'task hasn’t'} been started.`);
     }
 
     // Inter-project link dependencies check
     const incomingLinks = Object.values(links).filter((l) => l.targetProjectId === projectId);
     if (incomingLinks.length > 0 && completionRatio < 50) {
-      bottlenecks.push(`This planet holds upstream dependencies for other celestial worlds.`);
+      bottlenecks.push(`Other planets depend on this one, and it’s less than half done.`);
     }
 
-    // Velocity estimation: assuming average 1.5 tasks completed per week
+    // Rough estimate only: assumes 2.5 working days per remaining task (not derived from history)
     const remainingTasks = todoCount + inProgressCount;
     const estimatedDaysRemaining = Math.max(1, Math.round(remainingTasks * 2.5));
 
+    // Open tasks grouped by when they are due (real data from each task's due date)
+    const DAY = 86_400_000;
+    const due = { overdue: 0, week: 0, nextWeek: 0, later: 0, none: 0 };
+    for (const t of tasks) {
+      if (t.status === 'done') continue;
+      if (!t.dueDate) due.none++;
+      else if (t.dueDate < now) due.overdue++;
+      else if (t.dueDate < now + 7 * DAY) due.week++;
+      else if (t.dueDate < now + 14 * DAY) due.nextWeek++;
+      else due.later++;
+    }
+
     return {
+      due,
       completionRatio,
       healthScore,
       todoCount,
@@ -105,9 +120,9 @@ export const ProjectInsightsTab = memo(function ProjectInsightsTab({ projectId }
   if (tasks.length === 0) {
     return (
       <EmptyState
-        title="No Telemetry Data Available"
-        description="Deploy satellite tasks to this world to generate orbital velocity diagnostics, health indicators, and bottleneck analytics."
-        actionLabel="Deploy First Task"
+        title="No insights yet"
+        description="Add a few tasks and this tab will show progress, due dates and anything that needs attention."
+        actionLabel="Add a task"
         onAction={() => openPanel('tasks')}
       />
     );
@@ -120,9 +135,9 @@ export const ProjectInsightsTab = memo(function ProjectInsightsTab({ projectId }
         {/* Health Score Gauge */}
         <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/[0.06] flex flex-col justify-between">
           <span className="text-[11px] text-slate-500 ">
-            Orbital Health Index
+            Health
           </span>
-          <div className="flex items-baseline gap-2 mt-2">
+          <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5 mt-2">
             <span
               className={`font-display text-3xl font-medium ${
                 metrics.healthScore > 80
@@ -135,7 +150,7 @@ export const ProjectInsightsTab = memo(function ProjectInsightsTab({ projectId }
               {metrics.healthScore}%
             </span>
             <span className="text-xs text-slate-400">
-              {metrics.healthScore > 80 ? 'STABLE ORBIT' : metrics.healthScore > 50 ? 'PERTURBED' : 'CRITICAL'}
+              {metrics.healthScore > 80 ? 'On track' : metrics.healthScore > 50 ? 'Needs attention' : 'At risk'}
             </span>
           </div>
           <div className="w-full bg-white/[0.06] h-1.5 rounded-full mt-3 overflow-hidden">
@@ -155,14 +170,14 @@ export const ProjectInsightsTab = memo(function ProjectInsightsTab({ projectId }
         {/* Completion Velocity */}
         <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/[0.06] flex flex-col justify-between">
           <span className="text-[11px] text-slate-500 ">
-            Satellites In Target Orbit
+            Tasks done
           </span>
-          <div className="flex items-baseline gap-2 mt-2">
+          <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5 mt-2">
             <span className="font-display text-3xl font-medium text-white">
               {metrics.completionRatio}%
             </span>
             <span className="text-xs text-slate-400">
-              {metrics.doneCount}/{tasks.length} Done
+              {metrics.doneCount} of {tasks.length}
             </span>
           </div>
           <div className="w-full bg-white/[0.06] h-1.5 rounded-full mt-3 overflow-hidden">
@@ -176,79 +191,57 @@ export const ProjectInsightsTab = memo(function ProjectInsightsTab({ projectId }
         {/* Projected Horizon */}
         <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/[0.06] flex flex-col justify-between">
           <span className="text-[11px] text-slate-500 ">
-            Estimated Orbit Completion
+            Rough estimate
           </span>
-          <div className="flex items-baseline gap-2 mt-2">
+          <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5 mt-2">
             <span className="font-display text-3xl font-medium text-slate-200">
               ~{metrics.estimatedDaysRemaining}d
             </span>
-            <span className="text-xs text-slate-400">at current burn</span>
+            <span className="text-xs text-slate-400">to finish (est.)</span>
           </div>
           <span className="text-[11px] text-slate-500 mt-3">
-            {metrics.todoCount + metrics.inProgressCount} payloads pending
+            Assumes ~2.5 days per open task. Not based on your history.
           </span>
         </div>
       </div>
 
-      {/* Trajectory Burn-Up Sparkline Visualization */}
-      <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.06] space-y-3">
-        <div className="flex items-center justify-between">
-          <span className="text-[11px] text-slate-400 ">
-            Trajectory Burn-Up Vector
-          </span>
-          <span className="text-xs text-cyan-400">60 FPS Kinematics</span>
-        </div>
-
-        {/* SVG Sparkline Curve */}
-        <div className="h-28 w-full relative flex items-end">
-          <svg className="w-full h-full overflow-visible" preserveAspectRatio="none" viewBox="0 0 100 40">
-            <defs>
-              <linearGradient id="orbitBurnGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#22d3ee" stopOpacity="0.35" />
-                <stop offset="100%" stopColor="#22d3ee" stopOpacity="0.0" />
-              </linearGradient>
-            </defs>
-            {/* Area fill */}
-            <path
-              d={`M 0 40 L 0 35 Q 25 30, 50 ${Math.max(10, 38 - metrics.completionRatio * 0.28)} T 100 ${Math.max(
-                4,
-                38 - metrics.completionRatio * 0.35
-              )} L 100 40 Z`}
-              fill="url(#orbitBurnGrad)"
-            />
-            {/* Line trace */}
-            <path
-              d={`M 0 35 Q 25 30, 50 ${Math.max(10, 38 - metrics.completionRatio * 0.28)} T 100 ${Math.max(
-                4,
-                38 - metrics.completionRatio * 0.35
-              )}`}
-              fill="none"
-              stroke="#22d3ee"
-              strokeWidth="1.5"
-            />
-            {/* End point beacon */}
-            <circle
-              cx="100"
-              cy={Math.max(4, 38 - metrics.completionRatio * 0.35)}
-              r="2.5"
-              fill="#ffffff"
-            />
-          </svg>
-        </div>
-
-        <div className="flex justify-between text-[11px] text-slate-500 pt-1 border-t border-white/[0.04]">
-          <span>Launch Inception</span>
-          <span>Mid-Orbit Velocity</span>
-          <span>Target Equilibrium</span>
-        </div>
-      </div>
+      {/* Open tasks by due date (real data) */}
+      <section aria-labelledby="ins-due" className="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.06]">
+        <h3 id="ins-due" className="text-sm font-medium text-white mb-4">Open tasks by due date</h3>
+        {(() => {
+          const rows: { label: string; value: number; tone: string }[] = [
+            { label: 'Overdue', value: metrics.due.overdue, tone: 'bg-rose-400' },
+            { label: 'This week', value: metrics.due.week, tone: 'bg-amber-400' },
+            { label: 'Next week', value: metrics.due.nextWeek, tone: 'bg-sky-300' },
+            { label: 'Later', value: metrics.due.later, tone: 'bg-slate-400' },
+            { label: 'No date', value: metrics.due.none, tone: 'bg-slate-600' },
+          ];
+          const max = Math.max(1, ...rows.map((r) => r.value));
+          return (
+            <ul className="space-y-2.5">
+              {rows.map((r) => (
+                <li key={r.label} className="grid grid-cols-[5.5rem_1fr_1.5rem] items-center gap-3 text-xs">
+                  <span className="text-slate-400">{r.label}</span>
+                  <span className="h-1.5 rounded-full bg-white/[0.06] overflow-hidden" aria-hidden>
+                    <span
+                      className={`block h-full rounded-full ${r.tone} transition-[width] duration-700 ease-[var(--ease-out)]`}
+                      style={{ width: `${(r.value / max) * 100}%` }}
+                    />
+                  </span>
+                  <span className="text-white tabular-nums text-right">{r.value}</span>
+                </li>
+              ))}
+            </ul>
+          );
+        })()}
+      </section>
 
       {/* Task Status & Priority Breakdown */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {/* Status Distribution */}
         <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/[0.06] space-y-3">
           <span className="text-[11px] text-slate-400 block">
-            Status Breakdown
+            By status
           </span>
           <div className="space-y-2">
             <div className="flex items-center justify-between text-xs">
@@ -265,7 +258,7 @@ export const ProjectInsightsTab = memo(function ProjectInsightsTab({ projectId }
             </div>
             <div className="flex items-center justify-between text-xs">
               <span className="text-slate-400 flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-slate-500" /> To Do
+                <span className="w-1.5 h-1.5 rounded-full bg-slate-500" /> To do
               </span>
               <span className="text-white">{metrics.todoCount}</span>
             </div>
@@ -275,7 +268,7 @@ export const ProjectInsightsTab = memo(function ProjectInsightsTab({ projectId }
         {/* Priority Matrix */}
         <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/[0.06] space-y-3">
           <span className="text-[11px] text-slate-400 block">
-            Velocity Priority Mix
+            By priority
           </span>
           <div className="space-y-2">
             <div className="flex items-center justify-between text-xs">
@@ -302,9 +295,9 @@ export const ProjectInsightsTab = memo(function ProjectInsightsTab({ projectId }
       <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/[0.06] space-y-2.5">
         <div className="flex items-center justify-between">
           <span className="text-[11px] text-slate-400 ">
-            Gravitational Perturbations & Risks
+            Needs attention
           </span>
-          <span className="text-[11px] text-slate-500">Autonomous Diagnostics</span>
+          <span className="text-[11px] text-slate-500">Checked automatically</span>
         </div>
 
         {metrics.bottlenecks.length === 0 ? (
@@ -318,7 +311,7 @@ export const ProjectInsightsTab = memo(function ProjectInsightsTab({ projectId }
                 key={idx}
                 className="text-xs text-amber-300/90 flex items-start gap-2 p-2 rounded-lg bg-amber-500/5 border border-amber-500/15"
               >
-                <span>⚠</span>
+                <Icon name="alert" size={14} className="mt-px shrink-0" />
                 <span>{b}</span>
               </li>
             ))}

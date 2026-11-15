@@ -3,6 +3,7 @@ import { useOrbitStore } from '../store/useOrbitStore';
 import { Icon } from './ui/Icon';
 import { HelpModal } from './HelpModal';
 import { useMediaQuery } from '../motion/useMediaQuery';
+import { SIDE_PANEL_QUERY, SIDE_PANEL_WIDTH, TOPBAR_COMPACT_QUERY } from './ui/layout';
 
 interface TopBarProps {
   onReturnToLanding?: () => void;
@@ -21,9 +22,13 @@ export const TopBar = memo(function TopBar({ onReturnToLanding }: TopBarProps) {
   const setAuthModalOpen = useOrbitStore((s) => s.setAuthModalOpen);
   const [showHelp, setShowHelp] = useState(false);
   const panelOpen = useOrbitStore((s) => s.ui.panelOpen);
-  const isDesktop = useMediaQuery('(min-width: 640px)');
+  const hasSidePanel = useMediaQuery(SIDE_PANEL_QUERY);
+  const narrowDesktop = useMediaQuery(TOPBAR_COMPACT_QUERY);
   // Slide the controls out from under the workspace panel instead of letting it cover them
-  const reserve = panelOpen && isDesktop ? 500 : 0;
+  const reserve = panelOpen && hasSidePanel ? SIDE_PANEL_WIDTH : 0;
+  // While the side panel is open on a narrower desktop, show icons only so the bar never collides
+  const textHidden = reserve > 0 && narrowDesktop;
+  const label = textHidden ? 'hidden' : 'hidden sm:inline';
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -94,8 +99,8 @@ export const TopBar = memo(function TopBar({ onReturnToLanding }: TopBarProps) {
               className={`w-1.5 h-1.5 rounded-full ${user ? 'bg-emerald-400' : 'bg-slate-500'}`}
               aria-hidden
             />
-            <Icon name="cloud" className="sm:hidden" />
-            <span className="hidden sm:inline max-w-[9rem] truncate">{user ? user.name || 'Synced' : 'Cloud sync'}</span>
+            <Icon name="cloud" className={textHidden ? '' : 'sm:hidden'} />
+            <span className={`${label} max-w-[9rem] truncate`}>{user ? user.name || 'Synced' : 'Cloud sync'}</span>
           </button>
 
           <button
@@ -104,8 +109,8 @@ export const TopBar = memo(function TopBar({ onReturnToLanding }: TopBarProps) {
             aria-label="Ask AI (Command K)"
           >
             <Icon name="sparkle" className="text-ion" />
-            <span className="hidden sm:inline">Ask AI</span>
-            <kbd className="kbd hidden lg:inline-flex">⌘K</kbd>
+            <span className={label}>Ask AI</span>
+            <kbd className={`kbd ${textHidden ? 'hidden' : 'hidden lg:inline-flex'}`}>⌘K</kbd>
           </button>
 
           <button
@@ -114,7 +119,7 @@ export const TopBar = memo(function TopBar({ onReturnToLanding }: TopBarProps) {
             aria-label="Create a new planet (N)"
           >
             <Icon name="plus" size={15} strokeWidth={2.25} />
-            <span className="hidden sm:inline">New planet</span>
+            <span className={label}>New planet</span>
           </button>
 
           <button

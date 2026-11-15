@@ -1,7 +1,8 @@
-import { useRef, useMemo, memo } from 'react';
+import { useRef, useMemo, memo, useEffect } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useOrbitStore } from '../store/useOrbitStore';
+import { useQuality } from './quality';
 
 const STAR_COUNT = 2200;
 
@@ -52,6 +53,7 @@ export const Starfield = memo(function Starfield() {
   const pointsRef = useRef<THREE.Points>(null);
   const reducedMotion = useOrbitStore((s) => s.settings.reducedMotion);
   const dpr = useThree((s) => s.viewport.dpr);
+  const q = useQuality();
 
   const { geometry, material } = useMemo(() => {
     const rand = mulberry32(0x0b17);
@@ -107,6 +109,19 @@ export const Starfield = memo(function Starfield() {
     });
     return { geometry: g, material: m };
   }, []);
+
+  // Adaptive density: draw fewer stars on weaker tiers without rebuilding any buffers
+  useEffect(() => {
+    geometry.setDrawRange(0, Math.floor(STAR_COUNT * q.starDensity));
+  }, [geometry, q.starDensity]);
+
+  useEffect(
+    () => () => {
+      geometry.dispose();
+      material.dispose();
+    },
+    [geometry, material]
+  );
 
   useFrame((state, delta) => {
     material.uniforms.uTime.value = state.clock.elapsedTime;

@@ -67,7 +67,7 @@ export const TaskDetail = memo(function TaskDetail({ taskId }: TaskDetailProps) 
       {/* Description Edit */}
       <div>
         <label className="text-[11px] text-slate-400 block mb-1">
-          Payload Specification & Notes
+          Notes
         </label>
         <textarea
           value={description}
@@ -84,7 +84,7 @@ export const TaskDetail = memo(function TaskDetail({ taskId }: TaskDetailProps) 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
           <label className="text-[11px] text-slate-400 block mb-1">
-            Priority Kinematics
+            Priority
           </label>
           <select
             value={priority}
@@ -104,7 +104,7 @@ export const TaskDetail = memo(function TaskDetail({ taskId }: TaskDetailProps) 
 
         <div>
           <label className="text-[11px] text-slate-400 block mb-1">
-            Due Horizon
+            Due date
           </label>
           <input
             type="date"

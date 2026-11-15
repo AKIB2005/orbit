@@ -1,209 +1,163 @@
 # ORBIT
 
-> **Your universe. Your workflow. Your gravity.**
->
-> ORBIT is a spatial productivity workspace that turns projects into planets, tasks into orbiting satellites, and project dependencies into visual connections. Explore your work in an interactive 3D universe, manage it through focused project workspaces, and use an AI assistant to plan and prioritize.
+**Your universe. Your workflow. Your gravity.**
 
-<p align="center">
-  <img src="src/assets/hero.png" alt="ORBIT spatial productivity interface preview" width="100%" />
-</p>
+ORBIT is a spatial productivity app. Projects are planets, tasks are satellites orbiting them, milestones mark key dates, and an AI assistant can plan, re-prioritise and create work for you (always showing a change before applying it).
 
-## Overview
+It works fully offline. Everything is stored in your browser (IndexedDB) unless you choose to sign in for cloud sync.
 
-Traditional productivity tools often present work as pages, tables, and lists. ORBIT experiments with a spatial interface: projects are represented as planets, tasks orbit their projects, and dependencies connect related work. A 2D-friendly fallback is available when WebGL cannot be used.
+## Contents
 
-ORBIT is designed to bring different kinds of work into one place. Users can create projects manually for development, academics, hackathons, business, creative work, or personal goals. GitHub can optionally provide repository context for a linked project.
+- [Quick start](#quick-start)
+- [Scripts](#scripts)
+- [Environment variables](#environment-variables)
+- [Using the app](#using-the-app)
+- [Project structure](#project-structure)
+- [Design system and motion](#design-system-and-motion)
+- [Performance and quality tiers](#performance-and-quality-tiers)
+- [Accessibility](#accessibility)
+- [Testing](#testing)
+- [Deployment](#deployment)
+- [Known limitations](#known-limitations)
 
-## Key features
+## Quick start
 
-### Spatial project universe
-- Interactive 3D scene built with React Three Fiber and Three.js.
-- Projects represented as planets with distinct visual themes.
-- Tasks visualized as orbiting satellites.
-- Visual project dependencies and orbital navigation.
-- WebGL availability handling with a 2D radar fallback.
-
-### Project and task management
-- Create, edit, and delete projects.
-- Create, update, complete, and delete tasks.
-- Organize tasks by status and priority.
-- Add milestones, notes, due dates, and task dependencies.
-- Review project progress, insights, and timeline activity.
-
-### ORBIT AI Command Center
-- Ask questions about the current workspace.
-- Request task prioritization and planning suggestions.
-- Review suggested structured actions before applying them.
-- Uses the built-in Local Cognitive Engine when the Gemini server integration is not configured or unavailable.
-- Optional Gemini-powered responses through a server-side API integration.
-
-### Optional GitHub connection
-- Connect a GitHub account through the GitHub OAuth flow when server credentials are configured.
-- Browse repositories and view available repository insights.
-- Link a repository to an existing ORBIT project.
-- Import open GitHub issues as ORBIT tasks.
-- Demo repository data is used when GitHub credentials are not configured; demo data is not live GitHub data.
-
-### Persistence and accounts
-- Local-first workspace persistence using IndexedDB via `idb-keyval`.
-- Optional Supabase email authentication and OAuth sign-in.
-- Optional cloud synchronization for projects, tasks, milestones, and dependencies when Supabase is configured.
-- The app can be explored locally without configuring external service credentials.
-
-### Motion and accessibility
-- Centralized motion tokens and reusable motion preferences.
-- Reduced-motion preference support.
-- Lazy-loaded 3D landing-page hero.
-- Adaptive 3D rendering resolution and a WebGL fallback.
-- Keyboard-accessible modal interactions and interface controls.
-
-## Tech stack
-
-| Area | Technologies |
-|---|---|
-| Frontend | React 19, TypeScript, Vite |
-| Styling | Tailwind CSS 4 |
-| 3D graphics | Three.js, React Three Fiber, Drei |
-| Motion | Framer Motion, GSAP |
-| State management | Zustand |
-| Local persistence | IndexedDB, `idb-keyval` |
-| Authentication and cloud data | Supabase (optional) |
-| AI | Local Cognitive Engine with optional Google Gemini API |
-| GitHub | GitHub OAuth/API integration (optional) |
-| Validation and tests | Zod, Vitest, Testing Library |
-| Code quality | ESLint, TypeScript |
-
-## Getting started
-
-### Requirements
-
-- Node.js compatible with the installed Vite version.
-- npm.
-- Git (optional, for cloning and version control).
-
-### 1. Clone the repository
-
-```bash
-git clone https://github.com/<your-github-username>/<your-repository>.git
-cd <your-repository>
-```
-
-### 2. Install dependencies
+Requirements: Node.js 20 or newer (developed on 22) and npm.
 
 ```bash
 npm install
+npm run dev        # http://localhost:5173
 ```
 
-### 3. Configure environment variables (optional)
+No configuration is required. Without any environment variables ORBIT runs entirely locally, with a built-in assistant and sample data.
 
-Copy the example file:
+## Scripts
 
-```bash
-cp .env.example .env
-```
+| Command | What it does |
+| --- | --- |
+| `npm run dev` | Start the Vite dev server (also serves the `/api` routes locally). |
+| `npm run build` | Type-check (`tsc -b`) then create a production build in `dist/`. |
+| `npm run preview` | Serve the production build locally. |
+| `npm run lint` | Run ESLint over the repo. |
+| `npm run typecheck` | Type-check only. |
+| `npm test` | Run the unit tests once (Vitest). |
+| `npm run test:watch` | Run Vitest in watch mode. |
 
-On Windows PowerShell, use:
+## Environment variables
 
-```powershell
-Copy-Item .env.example .env
-```
+Copy `.env.example` to `.env`. All are optional.
 
-Add credentials only for the integrations you intend to use. The app can run without these credentials using its local-first and demo/fallback paths.
+| Variable | Where it is used | Without it |
+| --- | --- | --- |
+| `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` | Browser: account sign-in and cloud sync. Schema is in `supabase/schema.sql`. | Local-only mode (IndexedDB). |
+| `GEMINI_API_KEY` | Server only: the AI command endpoint. | The built-in local assistant answers instead. |
+| `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET` | Server only: GitHub integration. | Read-only sample repository data. |
 
-| Variable | Used for | Notes |
-|---|---|---|
-| `VITE_SUPABASE_URL` | Supabase client | Public project URL; optional |
-| `VITE_SUPABASE_ANON_KEY` | Supabase client | Public/anon key; protect data with correct Supabase RLS policies |
-| `GEMINI_API_KEY` | Gemini server integration | Server-side secret; never expose with a `VITE_` prefix |
-| `GITHUB_CLIENT_ID` | GitHub OAuth server integration | Server-side configuration |
-| `GITHUB_CLIENT_SECRET` | GitHub OAuth server integration | Secret; never commit it or expose it in browser code |
+Secrets without the `VITE_` prefix are never sent to the browser.
 
-**Security:** Never commit `.env` or paste private API keys into source files. Keep server secrets in the hosting provider's environment-variable settings. The Supabase anon key is intended for client use, but database access must still be protected with Row Level Security.
+## Using the app
 
-### 4. Start the development server
+- **Landing page** introduces ORBIT; **Enter your orbit** opens the workspace (`#workspace`).
+- **Click a planet** (or its entry in the bottom list) to fly to it and open its panel: Overview, Tasks, Insights, Timeline, Milestones, Notes, Links (dependencies) and Settings.
+- **Right-click** a planet for quick actions. Deleting asks for confirmation.
+- **3D / 2D** in the top bar switches between the 3D universe and a flat radar. The radar is also the automatic fallback when WebGL is unavailable.
 
-```bash
-npm run dev
-```
-
-Open the local URL printed by Vite (usually `http://localhost:5173`). The Vite development configuration also registers the project's AI and GitHub middleware endpoints for local development.
-
-## Available scripts
-
-| Command | Description |
-|---|---|
-| `npm run dev` | Start the Vite development server |
-| `npm run build` | Run TypeScript project builds and create the production bundle |
-| `npm run preview` | Preview the generated production bundle locally |
-| `npm run lint` | Run ESLint |
-| `npx vitest run` | Run the Vitest test files directly (there is currently no `npm test` script) |
+| Key | Action |
+| --- | --- |
+| Drag / scroll | Rotate / zoom the 3D view |
+| `]` and `[` | Next / previous planet |
+| `Tab` | Next planet, only while nothing is focused and no panel is open (otherwise Tab moves focus normally) |
+| `N` | New planet |
+| `⌘K` / `Ctrl K` | Ask AI |
+| `Esc` | Close dialog, menu or panel |
+| `?` | Show shortcuts (also has the Reduce motion switch) |
 
 ## Project structure
 
-```text
+```
+api/                  Serverless handlers (AI, GitHub), used on Vercel
 src/
-├── ai/                 # AI client, local cognitive engine, action schemas
-├── assets/             # Static assets used by the application
-├── components/         # Landing page, workspace, panels, forms and UI
-│   ├── ai/             # AI Command Center and action cards
-│   ├── auth/           # Authentication modal
-│   ├── common/         # Shared loading, empty-state and toast UI
-│   ├── github/         # GitHub integration interface
-│   ├── insights/       # Project insights
-│   ├── landing/        # Landing page and hero experience
-│   └── timeline/       # Project timeline
-├── lib/                # Supabase and GitHub client helpers
-├── motion/             # Motion tokens and reduced-motion preferences
-├── scene/              # Three.js universe, planets, camera and effects
-├── server/             # Vite development middleware for AI and GitHub
-├── store/              # Zustand application state and persistence
-├── types/              # Shared TypeScript types
-└── utils/              # Validation, IDs and orbital calculations
-
-index.html              # Application HTML entry
-vite.config.ts          # Vite, Tailwind and development middleware setup
-.env.example            # Environment-variable template
-VERCEL_DEPLOYMENT.md    # Deployment notes and integration setup
+  App.tsx             View switch (landing/workspace), page transition, document title
+  components/
+    landing/          Marketing page and its lightweight 3D hero
+    ui/               Shared primitives: Modal (focus trap), Icon
+    common/           Toasts, empty states, loaders, screen-reader announcer
+    ai/ auth/ github/ insights/ timeline/ radar/   Feature areas
+    SlidePanel.tsx, TabBar.tsx, TopBar.tsx, ...    Workspace shell
+  scene/              React Three Fiber scene: planets, camera director, starfield, quality tiers
+  motion/             Motion tokens, reduced-motion preference, media-query hook
+  store/              Zustand store with IndexedDB persistence
+  ai/                 Action schemas (zod), local engine, client
+  server/             Dev-time middleware mirroring the serverless handlers
+  __tests__/          Vitest unit tests
+supabase/schema.sql   Optional cloud-sync schema
 ```
 
-## Current integration notes
+## Design system and motion
 
-- **Local-first mode:** Without Supabase credentials, workspace data is stored locally in the browser. Local data is tied to that browser/device and is not automatically shared across devices.
-- **Supabase:** Authentication and cloud-sync helpers are present. A Supabase project, matching database schema, redirect configuration, and appropriate Row Level Security policies are required for real account-backed cloud use.
-- **Gemini:** The client calls `/api/ai/command`; if the Gemini integration is unavailable or unconfigured, it falls back to the Local Cognitive Engine.
-- **GitHub:** The UI supports connecting, browsing repositories, linking a repository to a project, viewing insights, and syncing issues as tasks. Without GitHub credentials, sample/demo repository data may be shown.
-- **Deployment:** The current AI and GitHub handlers are registered through Vite's `configureServer` middleware, which is intended for the Vite development server. Before deploying these integrations to production, provide and verify production-compatible serverless/API endpoints. Review `VERCEL_DEPLOYMENT.md`; do not assume development middleware is automatically deployed as Vercel functions.
-- **GitHub security:** Review OAuth scopes, state validation, token storage, and session persistence before enabling real-user production access. Use the minimum permissions required and never expose access tokens or client secrets in the browser.
+**Styling.** Tailwind CSS v4. Design tokens (colours, radii, durations, easings) are CSS variables in `src/index.css`. Shared component classes (`.btn`, `.btn-primary`, `.btn-ghost`, `.btn-glass`, `.btn-icon`, `.field`, `.chip`, `.kbd`, `.sheet-surface`) live in `@layer components`, so Tailwind utilities can always override them.
 
-## Build and quality checks
+**Motion.** All framer-motion transitions use `src/motion/tokens.ts`:
 
-Before submitting or deploying, run:
+- `ease.out` for things that arrive, `ease.inOut` for things that travel.
+- Springs only for surfaces you physically move (panels, sheets, the tab underline).
+- Exits are faster than entrances.
+- Variants (`modal`, `popover`, `toast`, `listRow`, `collapse`, `tabSwap`) are reused rather than redefined.
+
+CSS transitions in the primitives use the matching `--ease-*` / `--dur-*` variables. Some one-off Tailwind `duration-*` classes on small hover effects remain.
+
+**Camera.** `scene/CameraController.tsx` flies to the planet's live position keeping the viewer's bearing, follows it afterwards, shifts the framing clear of the open panel (sideways on desktop, upward on phones), and yields immediately to user input.
+
+## Performance and quality tiers
+
+The 3D scene has two tiers, defined in `src/scene/quality.ts`:
+
+| | high | low |
+| --- | --- | --- |
+| Pixel ratio | up to 1.75 | 1 |
+| Stars drawn | 100% | 35% |
+| Planet / core sphere detail | 48 / 64 segments | 24 / 32 |
+| Lights | ambient + 3 directional + 2 point | ambient + 1 directional + 1 point |
+| Antialiasing | on | off |
+
+The starting tier is a heuristic from CPU cores, device memory, data-saver and small touch screens. The runtime performance monitor can demote it if frames drop. Add `?quality=low` or `?quality=high` to the URL to force a tier.
+
+Other behaviour:
+
+- Rendering **pauses while the tab is hidden**.
+- With **reduced motion** enabled, the scene renders **on demand** instead of continuously.
+- Stars are one draw call and twinkle on the GPU.
+- Geometries and materials created outside React Three Fiber's automatic cleanup are disposed on unmount.
+- Planet labels load in an isolated boundary, so a failed font download cannot hide the scene.
+
+**Measuring.** Open the app with `?debug` and run `window.__orbitStats()` in the console to read frames drawn, draw calls, triangles, geometries, textures and the active tier.
+
+## Accessibility
+
+- Dialogs (create planet, AI, account, GitHub, help) share one `Modal`: focus is trapped, `Esc` closes, focus returns to where it was.
+- The workspace panel is a labelled dialog; closing it by keyboard returns focus to the planet list.
+- Tabs follow the ARIA tab pattern with arrow-key / Home / End navigation.
+- The planet list, the 2D radar and the context menu are fully keyboard operable; selection changes are announced through a live region.
+- The 3D canvas has a text description, and a "Skip to planet list" link is available in the workspace.
+- `prefers-reduced-motion` is honoured live, and there is a manual **Reduce motion** switch in the help dialog (`?`).
+- Visible focus rings on all interactive elements.
+
+## Testing
 
 ```bash
-npm run lint
-npm run build
-npx vitest run
+npm test
 ```
 
-Resolve any reported errors before treating the build as release-ready. Also manually test the key flows: entering the universe, selecting a planet, creating and updating projects/tasks, using the AI assistant and fallback, opening project tabs, and checking the 2D fallback where WebGL is unavailable.
+Unit tests cover the store, AI action schemas, orbital maths, quality-tier selection, motion-token invariants and the AI reply renderer (including HTML escaping). They run in Node; there are currently **no browser or component-level tests**, so modal focus behaviour, the camera and the 3D scene are verified manually.
 
-## Product direction
+## Deployment
 
-ORBIT's long-term direction is a unified spatial workspace for development, academics, hackathons, business, creative projects, and personal goals. The current implementation provides the foundation: a visual project universe, project/task management, an AI command interface, optional Supabase helpers, and optional GitHub project context. Broader integrations and cross-workspace intelligence can be added incrementally.
+The repo includes `vercel.json` (SPA rewrite and `/api` routes). See `VERCEL_DEPLOYMENT.md` for the full walkthrough. Set the server-side variables in the Vercel project settings if you want Gemini or GitHub integration.
 
-## Contributing
+## Known limitations
 
-Contributions and practical feedback are welcome. Before opening a pull request:
-
-1. Create a focused branch for your change.
-2. Keep changes scoped and avoid committing secrets or local environment files.
-3. Run lint, build, and tests.
-4. Describe the behavior changed and include screenshots or a short recording for UI changes.
-
-## License
-
-No license file was present in this project snapshot. Add a `LICENSE` file before describing this project as open source or granting reuse rights.
-
----
-
-<p align="center"><strong>ORBIT</strong><br/>Your universe. Your workflow. Your gravity.</p>
+- The 2D radar shows planets at their starting orbital positions; it does not animate.
+- Insights "rough estimate" assumes about 2.5 days per open task; it is not derived from history.
+- A project count above 12 is not supported.
+- Quality-tier detection is heuristic; `navigator.deviceMemory` is Chromium-only.
+- ESLint still reports `no-explicit-any` / unused-variable errors in `api/` and `src/server/` (type-only, not behavioural).

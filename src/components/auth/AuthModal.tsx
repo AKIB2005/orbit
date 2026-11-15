@@ -124,7 +124,7 @@ export const AuthModal = memo(function AuthModal() {
                   configured ? 'bg-emerald-400 shadow-[0_0_6px_#34d399]' : 'bg-amber-400'
                 }`}
               />
-              {configured ? 'Supabase Postgres Online' : 'Local IndexedDB (Offline Vault)'}
+              {configured ? 'Cloud sync is on' : 'Stored on this device only'}
             </span>
           </div>
 
@@ -165,7 +165,7 @@ export const AuthModal = memo(function AuthModal() {
             <div className="space-y-4">
               {!configured && (
                 <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-[11px] text-amber-200/90 leading-relaxed">
-                  No Supabase URL provided in environment. Running in zero-latency offline mode. To activate cloud sync, set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.
+                  Cloud sync isn’t set up for this copy of ORBIT, so your projects stay on this device. (Developers: set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.)
                 </div>
               )}
 

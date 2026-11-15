@@ -9,6 +9,7 @@ import { SatelliteRing } from './SatelliteRing';
 import { OrbitalTrack } from './OrbitalTrack';
 import { getGlowTexture } from './glowTexture';
 import { LabelBoundary } from './LabelBoundary';
+import { useQuality } from './quality';
 import {
   getOrbitalParameters,
   calculateOrbitalPosition,
@@ -60,6 +61,9 @@ export const Planet = memo(function Planet({ projectId, orbitIndex }: PlanetProp
   const hoverProject = useOrbitStore((s) => s.hoverProject);
   const setContextMenu = useOrbitStore((s) => s.setContextMenu);
   const reducedMotion = useOrbitStore((s) => s.settings.reducedMotion);
+  // Focus effect: when another planet is selected, this one recedes slightly
+  const dimmed = useOrbitStore((s) => s.ui.selectedProjectId !== null && s.ui.selectedProjectId !== projectId);
+  const q = useQuality();
   // Shallow-compared: only re-render when *this* project's tasks change, not any task in the workspace.
   const tasks = useOrbitStore(
     useShallow((s) => Object.values(s.tasks).filter((t) => t.projectId === projectId))
@@ -106,15 +110,16 @@ export const Planet = memo(function Planet({ projectId, orbitIndex }: PlanetProp
     selectT.current = damp(selectT.current, isSelected ? 1 : 0, 7, dt);
     const h = hoverT.current;
     const sel = selectT.current;
+    const recede = dimmed ? 0.55 : 1;
 
     if (bodyRef.current) bodyRef.current.scale.setScalar(1 + h * 0.06);
-    if (matRef.current) matRef.current.emissiveIntensity = 0.22 + h * 0.5;
+    if (matRef.current) matRef.current.emissiveIntensity = (0.22 + h * 0.5) * recede;
 
     if (glowRef.current && glowMatRef.current) {
       const breathe = reducedMotion ? 0 : Math.sin(elapsed * 1.6 + orbitIndex) * 0.08;
       const s = radius * (3.0 + h * 0.5 + breathe);
       glowRef.current.scale.set(s, s, 1);
-      glowMatRef.current.opacity = 0.16 + h * 0.2;
+      glowMatRef.current.opacity = (0.16 + h * 0.2) * recede;
     }
 
     if (selectRingRef.current && selectMatRef.current) {
@@ -125,8 +130,11 @@ export const Planet = memo(function Planet({ projectId, orbitIndex }: PlanetProp
     }
 
     // Labels: name always readable, details only when the planet is in focus.
-    if (nameRef.current) nameRef.current.fillOpacity = damp(nameRef.current.fillOpacity, 0.55 + h * 0.45, 9, dt);
+    if (nameRef.current) nameRef.current.fillOpacity = damp(nameRef.current.fillOpacity, (0.55 + h * 0.45) * (dimmed ? 0.5 : 1), 9, dt);
     if (statusRef.current) statusRef.current.fillOpacity = damp(statusRef.current.fillOpacity, h, 9, dt);
+
+    const settling = Math.abs(hoverT.current - (active ? 1 : 0)) > 0.004 || Math.abs(selectT.current - (isSelected ? 1 : 0)) > 0.004;
+    if (settling || (dimmed && matRef.current && matRef.current.emissiveIntensity > 0.13)) state.invalidate();
   });
 
   if (!project) return null;
@@ -161,7 +169,7 @@ export const Planet = memo(function Planet({ projectId, orbitIndex }: PlanetProp
               document.body.style.cursor = '';
             }}
           >
-            <sphereGeometry args={[radius, 48, 48]} />
+            <sphereGeometry args={[radius, q.planetSegments, q.planetSegments]} />
             <meshStandardMaterial
               ref={matRef}
               color={theme.primary}

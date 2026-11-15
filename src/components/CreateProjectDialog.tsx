@@ -117,8 +117,8 @@ export const CreateProjectDialog = memo(function CreateProjectDialog() {
               className="field resize-none"
             />
           </div>
-          <div role="radiogroup" aria-label="Planet colour">
-            <span className="field-label">Colour</span>
+          <div role="radiogroup" aria-label="Planet color">
+            <span className="field-label">Color</span>
             <div className="flex flex-wrap gap-2">
               {THEMES.map((theme) => {
                 const on = colorTheme === theme;

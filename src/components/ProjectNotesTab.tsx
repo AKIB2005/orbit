@@ -31,7 +31,7 @@ export const ProjectNotesTab = memo(function ProjectNotesTab({ projectId }: Proj
       <div className="flex items-center justify-between">
         <div>
           <h3 className="font-display font-semibold text-base text-white">
-            Planetary Logbook & Architecture Notes
+            Notes
           </h3>
           <p className="text-xs text-slate-400 mt-0.5">
             Free-form notes for this project. Saved as you type.
@@ -56,7 +56,7 @@ export const ProjectNotesTab = memo(function ProjectNotesTab({ projectId }: Proj
 
         <div className="pt-3 border-t border-white/[0.06] flex items-center justify-between text-[11px] text-slate-400">
           <span>{notes.length} characters</span>
-          <span>IndexedDB Encrypted Offline Storage</span>
+          <span>Saved on this device</span>
         </div>
       </div>
     </div>

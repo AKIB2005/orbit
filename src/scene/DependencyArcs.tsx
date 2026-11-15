@@ -60,7 +60,7 @@ const DynamicDependencyArc = memo(function DynamicDependencyArc({ sourceId, targ
     [geometry, material]
   );
 
-  useFrame((_, delta) => {
+  useFrame((state, delta) => {
     const a = activePlanetPositions.get(sourceId);
     const b = activePlanetPositions.get(targetId);
     if (!a || !b) return;
@@ -87,6 +87,7 @@ const DynamicDependencyArc = memo(function DynamicDependencyArc({ sourceId, targ
     // three's typings omit dashOffset on LineDashedMaterial, though the shader reads it
     (material as unknown as { dashOffset: number }).dashOffset = dashOffset.current;
     material.opacity = 0.38 + emphasis.current * 0.3;
+    if (Math.abs(emphasis.current - target) > 0.01) state.invalidate();
   });
 
   return <primitive object={line} />;
