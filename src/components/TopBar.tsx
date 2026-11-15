@@ -49,6 +49,17 @@ export const TopBar = memo(function TopBar({ onReturnToLanding }: TopBarProps) {
         {/* Right: Actions */}
         <div className="pointer-events-auto flex items-center gap-2.5">
           <button
+            onClick={() => document.dispatchEvent(new CustomEvent('orbit:toggle-ai'))}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-mono rounded-lg glass-panel text-cyan-300 hover:text-white hover:border-cyan-400/50 transition-colors"
+            aria-label="Toggle AI Command Center (Cmd+K)"
+            title="AI Mission Navigator (Cmd+K)"
+          >
+            <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 shadow-[0_0_6px_#22d3ee] animate-pulse" />
+            <span>AI COPILOT</span>
+            <kbd className="hidden sm:inline-block px-1 py-0.2 rounded bg-black/40 border border-white/20 text-[9px]">⌘K</kbd>
+          </button>
+
+          <button
             onClick={handleCreateProject}
             className="flex items-center gap-2 px-3.5 py-1.5 text-xs font-display font-semibold tracking-wider uppercase rounded-lg bg-gradient-to-r from-violet-600 to-cyan-500 text-white shadow-[0_0_15px_-3px_rgba(139,92,246,0.6)] hover:brightness-110 active:scale-95 transition-all"
             aria-label="Create New Celestial Project"
