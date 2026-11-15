@@ -59,7 +59,7 @@ export const CreateTaskForm = memo(function CreateTaskForm({ projectId }: Create
         <button
           type="submit"
           disabled={!title.trim()}
-          className="px-4 py-2 bg-gradient-to-r from-violet-600 to-cyan-500 hover:from-violet-500 hover:to-cyan-400 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-display font-semibold tracking-wider uppercase rounded-xl transition-all shadow-[0_0_15px_-3px_rgba(139,92,246,0.5)]"
+          className="px-4 py-2 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed text-[#05050d] text-xs font-display font-medium tracking-wider uppercase rounded-xl transition-all shadow-[0_1px_2px_rgba(0,0,0,0.4)] active:scale-95 cursor-pointer"
         >
           Add Task
         </button>

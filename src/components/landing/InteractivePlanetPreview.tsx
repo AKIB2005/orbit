@@ -68,10 +68,10 @@ const SAMPLE_PROJECTS: Record<ColorTheme, { name: string; desc: string; tasks: S
     ],
   },
   teal: {
-    name: 'Sound & Particle Dynamics',
-    desc: 'Spatial audio ambience and interactive particle dust dynamics.',
+    name: 'Orbital Kinematics Engine',
+    desc: 'Keplerian velocity solver with gravitational acceleration offsets.',
     tasks: [
-      { id: '15', title: 'Subtle Cosmic Drone Ambience', priority: 'low', status: 'todo', satelliteSpeed: '0.4 rad/s' },
+      { id: '15', title: 'Keplerian Velocity Matrix', priority: 'critical', status: 'done', satelliteSpeed: '1.2 rad/s' },
     ],
   },
 };
@@ -90,22 +90,22 @@ export const InteractivePlanetPreview = memo(function InteractivePlanetPreview({
   const themeColors = COLOR_THEME_MAP[activeTheme];
 
   return (
-    <section id="interactive" className="relative py-28 px-6 max-w-7xl mx-auto">
+    <section id="interactive" className="relative py-32 px-6 max-w-7xl mx-auto">
       <div className="text-center max-w-3xl mx-auto mb-16">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-xs font-mono text-cyan-300 mb-4">
-          <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
-          <span>INTERACTIVE CELESTIAL STAGING</span>
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.03] border border-white/[0.08] text-[11px] font-mono tracking-[0.16em] uppercase text-slate-400 mb-4">
+          <span className="w-1.5 h-1.5 rounded-full bg-slate-300" />
+          <span>Interactive Celestial Staging</span>
         </div>
-        <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-white mb-6">
-          Inspect a <span className="gradient-accent-text">Planetary Microcosm</span>
+        <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl font-normal tracking-tight text-white mb-5">
+          Inspect a <span className="text-transparent bg-clip-text bg-gradient-to-b from-white via-white/95 to-slate-400 font-medium">planetary microcosm</span>
         </h2>
-        <p className="text-base sm:text-lg text-slate-400 leading-relaxed">
+        <p className="text-base sm:text-lg text-slate-400 leading-relaxed font-normal">
           Switch atmospheric spectra to observe how projects adapt color identity, orbital speed,
           and task telemetry in real time.
         </p>
 
         {/* Spectrum Switcher */}
-        <div className="flex flex-wrap items-center justify-center gap-2.5 mt-8">
+        <div className="flex flex-wrap items-center justify-center gap-2 mt-8">
           {THEMES.map((theme) => {
             const isSelected = activeTheme === theme.id;
             const tColor = COLOR_THEME_MAP[theme.id].primary;
@@ -113,15 +113,15 @@ export const InteractivePlanetPreview = memo(function InteractivePlanetPreview({
               <button
                 key={theme.id}
                 onClick={() => setActiveTheme(theme.id)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-mono font-medium transition-all duration-300 ${
+                className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-mono transition-all duration-200 cursor-pointer ${
                   isSelected
-                    ? 'bg-white/[0.1] border-white/30 text-white shadow-[0_0_20px_-3px_rgba(255,255,255,0.2)]'
-                    : 'bg-white/[0.02] border-white/[0.06] text-slate-400 hover:text-white hover:bg-white/[0.05]'
+                    ? 'bg-white/[0.08] border-white/20 text-white'
+                    : 'bg-white/[0.02] border-white/[0.05] text-slate-400 hover:text-white hover:bg-white/[0.04]'
                 } border`}
               >
                 <span
-                  className="w-2.5 h-2.5 rounded-full"
-                  style={{ backgroundColor: tColor, boxShadow: isSelected ? `0 0 10px ${tColor}` : 'none' }}
+                  className="w-2 h-2 rounded-full"
+                  style={{ backgroundColor: tColor }}
                 />
                 <span>{theme.label}</span>
               </button>
@@ -131,72 +131,57 @@ export const InteractivePlanetPreview = memo(function InteractivePlanetPreview({
       </div>
 
       {/* Main Interactive Staging Box */}
-      <div className="relative rounded-3xl glass-panel-glow border border-white/[0.1] p-8 lg:p-12 overflow-hidden">
-        {/* Subtle background cosmic radial glow */}
-        <div
-          className="absolute -right-20 -bottom-20 w-[500px] h-[500px] rounded-full blur-3xl opacity-20 pointer-events-none transition-colors duration-700"
-          style={{ backgroundColor: themeColors.primary }}
-        />
-
+      <div className="relative rounded-3xl bg-white/[0.02] border border-white/[0.07] p-8 lg:p-12 overflow-hidden backdrop-blur-2xl">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center relative z-10">
           {/* 3D Visualizer Simulation (Left / 7 cols) */}
-          <div className="lg:col-span-7 flex flex-col items-center justify-center relative min-h-[380px] bg-black/40 rounded-2xl border border-white/[0.06] p-8 overflow-hidden">
-            {/* Ambient Background Grid */}
-            <div className="absolute inset-0 cosmic-grid opacity-25" />
-
+          <div className="lg:col-span-7 flex flex-col items-center justify-center relative min-h-[380px] bg-black/40 rounded-2xl border border-white/[0.05] p-8 overflow-hidden">
             {/* Simulated Planetary Core */}
             <div className="relative flex items-center justify-center">
-              {/* Outer Pulsing Orbit Ring */}
+              {/* Outer Orbit Ring */}
               <div
-                className="absolute w-72 h-72 sm:w-80 sm:h-80 rounded-full border border-dashed opacity-30 animate-[spin_30s_linear_infinite]"
-                style={{ borderColor: themeColors.primary }}
+                className="absolute w-72 h-72 sm:w-80 sm:h-80 rounded-full border border-white/10"
               />
 
               {/* Tilted Satellite Ring */}
               <div
-                className="absolute w-60 h-60 rounded-full border border-cyan-400/40 opacity-40 rotate-[55deg] animate-[spin_18s_linear_infinite]"
+                className="absolute w-60 h-60 rounded-full border border-white/10 rotate-[55deg]"
               />
 
               {/* Orbiting Satellite Dots */}
-              <div className="absolute w-72 h-72 sm:w-80 sm:h-80 rounded-full animate-[spin_8s_linear_infinite]">
+              <div className="absolute w-72 h-72 sm:w-80 sm:h-80 rounded-full animate-[spin_10s_linear_infinite]">
                 <div
-                  className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 rounded-full shadow-[0_0_12px_#22d3ee] flex items-center justify-center"
-                  style={{ backgroundColor: '#22d3ee' }}
-                >
-                  <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
-                </div>
+                  className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 rounded-full flex items-center justify-center shadow-sm"
+                  style={{ backgroundColor: themeColors.primary }}
+                />
               </div>
 
-              <div className="absolute w-60 h-60 rounded-full rotate-[55deg] animate-[spin_14s_linear_infinite]">
+              <div className="absolute w-60 h-60 rounded-full rotate-[55deg] animate-[spin_16s_linear_infinite]">
                 <div
-                  className="absolute bottom-0 right-1/4 w-3.5 h-3.5 rounded-full shadow-[0_0_10px_#10b981]"
-                  style={{ backgroundColor: '#10b981' }}
+                  className="absolute bottom-0 right-1/4 w-2.5 h-2.5 rounded-full bg-slate-300"
                 />
               </div>
 
               {/* Planet Sphere Core */}
               <div
-                className="relative w-32 h-32 sm:w-36 sm:h-36 rounded-full flex items-center justify-center shadow-[0_0_60px_-10px_rgba(139,92,246,0.6)] transition-all duration-700"
+                className="relative w-28 h-28 sm:w-32 sm:h-32 rounded-full flex items-center justify-center transition-all duration-700 shadow-xl"
                 style={{
-                  background: `radial-gradient(circle at 35% 30%, #ffffff 0%, ${themeColors.primary} 50%, #030308 100%)`,
-                  boxShadow: `0 0 50px -5px ${themeColors.primary}80`,
+                  background: `radial-gradient(circle at 35% 30%, #e2e8f0 0%, ${themeColors.primary} 45%, #070712 100%)`,
                 }}
               >
-                {/* Surface texture detail */}
-                <div className="w-24 h-24 rounded-full border border-white/20 opacity-30 rotate-12" />
+                <div className="w-20 h-20 rounded-full border border-white/10 opacity-30 rotate-12" />
               </div>
             </div>
 
             {/* Dynamic Status Bar */}
-            <div className="mt-8 flex items-center gap-4 text-xs font-mono text-slate-300">
+            <div className="mt-8 flex items-center gap-4 text-xs font-mono text-slate-400">
               <span className="flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_#34d399]" />
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_#34d399]" />
                 Orbit Status: STABLE
               </span>
               <span className="text-slate-600">|</span>
-              <span className="text-slate-400">Gravitational Index: 4.8G</span>
+              <span>Gravitational Index: 4.8G</span>
               <span className="text-slate-600 hidden sm:inline">|</span>
-              <span className="text-slate-400 hidden sm:inline">{project.tasks.length} Satellites In Flight</span>
+              <span className="hidden sm:inline">{project.tasks.length} Satellites In Flight</span>
             </div>
           </div>
 
@@ -205,69 +190,69 @@ export const InteractivePlanetPreview = memo(function InteractivePlanetPreview({
             <div>
               <div className="flex items-center gap-2 mb-2">
                 <span
-                  className="w-2 h-2 rounded-full"
+                  className="w-1.5 h-1.5 rounded-full"
                   style={{ backgroundColor: themeColors.primary }}
                 />
-                <span className="text-xs font-mono uppercase tracking-widest text-slate-400">
+                <span className="text-xs font-mono uppercase tracking-widest text-slate-500">
                   Active Celestial Entity
                 </span>
               </div>
-              <h3 className="font-display text-2xl sm:text-3xl font-bold text-white mb-2">
+              <h3 className="font-display text-xl sm:text-2xl font-medium text-white mb-2">
                 {project.name}
               </h3>
-              <p className="text-sm text-slate-400 leading-relaxed">
+              <p className="text-sm text-slate-400 leading-relaxed font-normal">
                 {project.desc}
               </p>
             </div>
 
             {/* Task Satellite Manifest */}
-            <div className="space-y-2.5">
-              <div className="text-xs font-mono text-slate-400 uppercase tracking-wider flex justify-between">
+            <div className="space-y-2">
+              <div className="text-[11px] font-mono text-slate-500 uppercase tracking-wider flex justify-between">
                 <span>Orbiting Task Payloads</span>
-                <span>Orbital Velocity</span>
+                <span>Velocity</span>
               </div>
 
               {project.tasks.map((task) => (
                 <div
                   key={task.id}
-                  className="p-3.5 rounded-xl bg-white/[0.03] border border-white/[0.08] hover:border-white/20 transition-all flex items-center justify-between gap-3"
+                  className="p-3.5 rounded-xl bg-white/[0.02] border border-white/[0.05] hover:border-white/[0.1] transition-all flex items-center justify-between gap-3"
                 >
                   <div className="flex items-center gap-3 min-w-0">
                     <span
-                      className={`w-2 h-2 rounded-full shrink-0 ${
+                      className={`w-1.5 h-1.5 rounded-full shrink-0 ${
                         task.status === 'done'
-                          ? 'bg-emerald-400 shadow-[0_0_8px_#34d399]'
+                          ? 'bg-emerald-400'
                           : task.status === 'in_progress'
-                          ? 'bg-amber-400 shadow-[0_0_8px_#fbbf24]'
+                          ? 'bg-amber-400'
                           : 'bg-slate-500'
                       }`}
                     />
                     <div className="min-w-0">
-                      <p className="text-xs font-medium text-white truncate">
+                      <p className="text-xs font-medium text-slate-200 truncate">
                         {task.title}
                       </p>
-                      <span className="text-[10px] font-mono text-slate-400 uppercase">
+                      <span className="text-[10px] font-mono text-slate-500 uppercase">
                         Priority: {task.priority}
                       </span>
                     </div>
                   </div>
 
-                  <span className="text-[11px] font-mono text-cyan-300 shrink-0">
+                  <span className="text-[11px] font-mono text-slate-400 shrink-0">
                     {task.satelliteSpeed}
                   </span>
                 </div>
               ))}
             </div>
 
-            {/* Quick Action to Enter Orbit */}
+            {/* Action to Enter Orbit */}
             <div className="pt-2">
               <button
                 onClick={onEnterOrbit}
-                className="w-full py-3 px-4 rounded-xl text-xs font-display font-semibold tracking-wider uppercase text-white bg-gradient-to-r from-violet-600 to-cyan-500 hover:from-violet-500 hover:to-cyan-400 transition-all shadow-[0_0_25px_-5px_rgba(139,92,246,0.5)] flex items-center justify-center gap-2"
+                className="w-full py-3.5 px-4 rounded-xl text-xs font-display font-medium tracking-[0.14em] uppercase text-[#05050d] bg-white hover:bg-slate-100 transition-all shadow-[0_1px_3px_rgba(0,0,0,0.4)] flex items-center justify-center gap-2 active:scale-[0.98] cursor-pointer"
               >
-                <span>Launch This System in 3D Orbit</span>
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                <span>Launch System In 3D Orbit</span>
+                <svg className="w-3.5 h-3.5 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14 5l7 7m0 0l-7 7m7-7H3" />
                 </svg>
               </button>
             </div>

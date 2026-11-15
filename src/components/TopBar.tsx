@@ -54,16 +54,13 @@ export const TopBar = memo(function TopBar({ onReturnToLanding }: TopBarProps) {
           )}
 
           <div className="flex items-center gap-2 sm:gap-3 glass-panel px-2.5 sm:px-3.5 py-1.5 rounded-xl">
-            <div className="relative w-3.5 h-3.5 flex items-center justify-center">
-              <div className="absolute inset-0 rounded-full border border-violet-500/60 animate-ping" />
-              <div className="w-2 h-2 rounded-full bg-cyan-400 shadow-[0_0_8px_#22d3ee]" />
-            </div>
-            <h1 className="font-display text-xs sm:text-sm font-bold tracking-[0.2em] text-white uppercase">
+            <div className="w-2 h-2 rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,0.8)]" />
+            <h1 className="font-display text-xs sm:text-sm font-medium tracking-[0.2em] text-white uppercase">
               ORBIT
             </h1>
             <span className="text-slate-600">|</span>
             <span className="text-[11px] sm:text-xs text-slate-400 font-mono">
-              <span className="text-cyan-300 font-semibold">{projectCount}</span>/12 <span className="hidden sm:inline">WORLDS</span>
+              <span className="text-white font-medium">{projectCount}</span>/12 <span className="hidden sm:inline">WORLDS</span>
             </span>
           </div>
         </div>
@@ -72,11 +69,11 @@ export const TopBar = memo(function TopBar({ onReturnToLanding }: TopBarProps) {
         <div className="pointer-events-auto flex items-center gap-1.5 sm:gap-2.5">
           <button
             onClick={() => document.dispatchEvent(new CustomEvent('orbit:toggle-ai'))}
-            className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 text-xs font-mono rounded-lg glass-panel text-cyan-300 hover:text-white hover:border-cyan-400/50 transition-colors"
+            className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 text-xs font-mono rounded-lg bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-slate-300 hover:text-white transition-colors cursor-pointer"
             aria-label="Toggle AI Command Center (Cmd+K)"
             title="AI Mission Navigator (Cmd+K)"
           >
-            <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 shadow-[0_0_6px_#22d3ee] animate-pulse" />
+            <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
             <span className="hidden sm:inline">AI COPILOT</span>
             <span className="sm:hidden font-semibold">AI</span>
             <kbd className="hidden sm:inline-block px-1 py-0.2 rounded bg-black/40 border border-white/20 text-[9px]">⌘K</kbd>
@@ -84,21 +81,21 @@ export const TopBar = memo(function TopBar({ onReturnToLanding }: TopBarProps) {
 
           <button
             onClick={handleCreateProject}
-            className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3.5 py-1.5 text-xs font-display font-semibold tracking-wider uppercase rounded-lg bg-gradient-to-r from-violet-600 to-cyan-500 text-white shadow-[0_0_15px_-3px_rgba(139,92,246,0.6)] hover:brightness-110 active:scale-95 transition-all"
+            className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3.5 py-1.5 text-xs font-display font-medium tracking-wider uppercase rounded-lg bg-white text-[#05050d] hover:bg-slate-100 shadow-[0_1px_3px_rgba(0,0,0,0.4)] active:scale-95 transition-all cursor-pointer"
             aria-label="Create New Celestial Project"
           >
             <span>+ <span className="hidden sm:inline">NEW </span>PLANET</span>
-            <kbd className="hidden sm:inline-block px-1 py-0.2 rounded bg-black/30 border border-white/20 text-[10px] font-mono">
+            <kbd className="hidden sm:inline-block px-1 py-0.2 rounded bg-black/10 border border-black/20 text-[10px] font-mono text-black font-semibold">
               N
             </kbd>
           </button>
 
           <button
             onClick={() => setShowHelp(!showHelp)}
-            className="px-2.5 sm:px-3 py-1.5 text-xs font-mono rounded-lg glass-panel text-slate-300 hover:text-white hover:border-violet-500/40 transition-colors"
+            className="px-2.5 sm:px-3 py-1.5 text-xs font-mono rounded-lg bg-white/[0.03] hover:bg-white/[0.06] border border-white/[0.06] text-slate-400 hover:text-white transition-colors cursor-pointer"
             aria-label="Keyboard Shortcuts and Telemetry Help"
           >
-            <kbd className="text-cyan-300 font-bold">?</kbd> <span className="hidden sm:inline">HELP</span>
+            <kbd className="text-slate-300 font-bold">?</kbd> <span className="hidden sm:inline">HELP</span>
           </button>
         </div>
       </header>

@@ -26,6 +26,26 @@ export const ConstellationNavigator = memo(function ConstellationNavigator() {
     }
   };
 
+  // Global Tab key to cycle constellation
+  useEffect(() => {
+    const handleGlobalKey = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement;
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT') return;
+      if (projectList.length === 0) return;
+
+      if (e.key === 'Tab') {
+        e.preventDefault();
+        const currIdx = projectList.findIndex((p) => p.id === selectedProjectId);
+        const nextIdx = e.shiftKey
+          ? (currIdx - 1 + projectList.length) % projectList.length
+          : (currIdx + 1) % projectList.length;
+        selectProject(projectList[nextIdx].id);
+      }
+    };
+    window.addEventListener('keydown', handleGlobalKey);
+    return () => window.removeEventListener('keydown', handleGlobalKey);
+  }, [projectList, selectedProjectId, selectProject]);
+
   // Scroll active item into view
   useEffect(() => {
     if (!selectedProjectId || !navRef.current) return;
@@ -63,9 +83,9 @@ export const ConstellationNavigator = memo(function ConstellationNavigator() {
               aria-label={`Select ${project.name}, Status ${project.status}, ${projectTasks.length} tasks`}
               onClick={() => selectProject(isSelected ? null : project.id)}
               onKeyDown={(e) => handleKeyDown(e, idx)}
-              className={`group flex items-center gap-2.5 px-3.5 py-2 rounded-xl text-xs font-mono transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-cyan-400/50 shrink-0 ${
+              className={`group flex items-center gap-2.5 px-3.5 py-2 rounded-xl text-xs font-mono transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-cyan-400/50 shrink-0 cursor-pointer ${
                 isSelected
-                  ? 'bg-white/[0.12] border-white/30 text-white shadow-[0_0_20px_-3px_rgba(139,92,246,0.5)] scale-105'
+                  ? 'bg-white/[0.1] border-white/25 text-white shadow-[0_4px_16px_rgba(0,0,0,0.5)] scale-[1.02]'
                   : 'bg-white/[0.03] border-white/[0.06] text-slate-400 hover:text-white hover:bg-white/[0.07]'
               } border`}
             >

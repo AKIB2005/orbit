@@ -139,7 +139,7 @@ export const CreateProjectDialog = memo(function CreateProjectDialog() {
                 <button
                   type="submit"
                   disabled={!name.trim() || projectCount >= 12}
-                  className="flex-1 px-4 py-2 text-sm bg-accent-violet text-white font-medium rounded-md hover:bg-accent-violet/80 disabled:opacity-40 transition-colors"
+                  className="flex-1 px-4 py-2 text-sm bg-white text-[#05050d] font-medium rounded-md hover:bg-slate-100 disabled:opacity-40 transition-colors shadow-sm cursor-pointer"
                 >
                   Create
                 </button>

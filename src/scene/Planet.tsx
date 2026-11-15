@@ -35,6 +35,7 @@ export const Planet = memo(function Planet({ projectId, orbitIndex }: PlanetProp
   const isHovered = useOrbitStore((s) => s.ui.hoveredProjectId === projectId);
   const selectProject = useOrbitStore((s) => s.selectProject);
   const hoverProject = useOrbitStore((s) => s.hoverProject);
+  const setContextMenu = useOrbitStore((s) => s.setContextMenu);
   const reducedMotion = useOrbitStore((s) => s.settings.reducedMotion);
   const tasks = useOrbitStore((s) =>
     Object.values(s.tasks).filter((t) => t.projectId === projectId)
@@ -114,6 +115,13 @@ export const Planet = memo(function Planet({ projectId, orbitIndex }: PlanetProp
           onClick={(e) => {
             e.stopPropagation();
             selectProject(projectId);
+          }}
+          onContextMenu={(e) => {
+            e.stopPropagation();
+            const native = (e as unknown as { nativeEvent: MouseEvent }).nativeEvent;
+            if (native) {
+              setContextMenu({ x: native.clientX, y: native.clientY, targetId: projectId });
+            }
           }}
           onPointerOver={(e) => {
             e.stopPropagation();

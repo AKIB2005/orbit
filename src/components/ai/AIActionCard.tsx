@@ -128,14 +128,14 @@ export const AIActionCard = memo(function AIActionCard({
         <div className="flex items-center gap-2 mt-3 pt-2.5 border-t border-white/[0.06]">
           <button
             onClick={() => onConfirm(action.id)}
-            className="flex-1 py-1.5 px-3 bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white rounded-lg text-xs font-mono font-semibold tracking-wider transition-all shadow-[0_0_12px_rgba(16,185,129,0.4)] flex items-center justify-center gap-1.5"
+            className="flex-1 py-1.5 px-3 bg-emerald-500 hover:bg-emerald-400 text-[#05050d] rounded-lg text-xs font-mono font-medium tracking-wider transition-all shadow-sm flex items-center justify-center gap-1.5 cursor-pointer"
           >
             <span>Confirm & Execute</span>
             <span>✓</span>
           </button>
           <button
             onClick={() => onDismiss(action.id)}
-            className="py-1.5 px-3 bg-white/[0.04] hover:bg-white/[0.08] text-slate-400 hover:text-white rounded-lg text-xs font-mono transition-colors"
+            className="py-1.5 px-3 bg-white/[0.04] hover:bg-white/[0.08] text-slate-400 hover:text-white rounded-lg text-xs font-mono transition-colors cursor-pointer"
           >
             Dismiss
           </button>

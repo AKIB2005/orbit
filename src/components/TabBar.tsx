@@ -28,13 +28,25 @@ export const TabBar = memo(function TabBar() {
     { key: 'settings', label: 'Settings' },
   ];
 
+  const handleKeyDown = (e: React.KeyboardEvent, index: number) => {
+    if (e.key === 'ArrowRight') {
+      e.preventDefault();
+      const nextIdx = (index + 1) % tabs.length;
+      openPanel(tabs[nextIdx].key);
+    } else if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      const prevIdx = (index - 1 + tabs.length) % tabs.length;
+      openPanel(tabs[prevIdx].key);
+    }
+  };
+
   return (
     <div
       className="flex border-b border-white/[0.08] bg-black/20 overflow-x-auto px-2"
       role="tablist"
       aria-label="Workspace Sections"
     >
-      {tabs.map((tab) => {
+      {tabs.map((tab, idx) => {
         const isSelected = panelView === tab.key;
         return (
           <button
@@ -42,6 +54,7 @@ export const TabBar = memo(function TabBar() {
             role="tab"
             aria-selected={isSelected}
             onClick={() => openPanel(tab.key)}
+            onKeyDown={(e) => handleKeyDown(e, idx)}
             className={`px-3 py-2.5 text-xs font-mono transition-all flex items-center gap-1.5 whitespace-nowrap shrink-0 border-b-2 ${isSelected
                 ? 'text-cyan-300 border-cyan-400 font-semibold bg-white/[0.03]'
                 : 'text-slate-400 hover:text-white border-transparent hover:bg-white/[0.01]'

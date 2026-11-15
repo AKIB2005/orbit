@@ -5,6 +5,7 @@ import { sendAICommand } from '../../ai/aiClient';
 import type { AIAction } from '../../ai/actionSchemas';
 import { AIActionCard } from './AIActionCard';
 import { createId } from '../../utils/id';
+import { getOrbitalParameters, calculateOrbitalPosition } from '../../utils/orbitalKinematics';
 
 interface ChatMessage {
   id: string;
@@ -56,10 +57,14 @@ export const AICommandCenter = memo(function AICommandCenter() {
     }
   }, [messages, isLoading]);
 
-  // Global hotkey: Cmd+K / Ctrl+K & custom event to toggle AI Command Center
+  // Global hotkey: Cmd+K / Ctrl+K, Escape & custom event to toggle AI Command Center
   useEffect(() => {
     const handleToggle = () => setIsOpen((prev) => !prev);
     const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isOpen) {
+        setIsOpen(false);
+        return;
+      }
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
         setIsOpen((prev) => !prev);
@@ -71,7 +76,7 @@ export const AICommandCenter = memo(function AICommandCenter() {
       document.removeEventListener('orbit:toggle-ai', handleToggle);
       window.removeEventListener('keydown', handleKey);
     };
-  }, []);
+  }, [isOpen]);
 
   const handleSend = async (userPrompt?: string) => {
     const query = (userPrompt || input).trim();
@@ -152,12 +157,15 @@ export const AICommandCenter = memo(function AICommandCenter() {
             dueDate: targetAction.payload.dueDate,
           });
         } else if (targetAction.type === 'create_project') {
+          const pCount = Object.keys(projects).length;
+          const orbitParams = getOrbitalParameters(pCount);
+          const pos = calculateOrbitalPosition(orbitParams, orbitParams.initialAngle);
           createProject({
             name: targetAction.payload.name,
             description: targetAction.payload.description || '',
             colorTheme: targetAction.payload.colorTheme,
             status: 'active',
-            position: [Math.random() * 10 - 5, 0, Math.random() * 10 - 5],
+            position: pos,
           });
         }
 
@@ -191,16 +199,15 @@ export const AICommandCenter = memo(function AICommandCenter() {
       <div className="fixed bottom-20 right-4 sm:bottom-6 sm:right-6 z-40 pointer-events-auto">
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className="group relative flex items-center gap-3 px-4 py-2.5 rounded-2xl glass-panel-glow border border-violet-500/40 text-white font-display text-xs font-semibold tracking-wider uppercase transition-all duration-300 hover:scale-105 active:scale-95 shadow-[0_0_30px_rgba(139,92,246,0.5)] focus:outline-none"
+          className="group relative flex items-center gap-2.5 px-3.5 py-2.5 rounded-2xl bg-surface/90 border border-white/[0.1] text-white font-display text-xs font-medium tracking-wider uppercase transition-all duration-300 hover:border-white/20 active:scale-95 shadow-[0_12px_32px_rgba(0,0,0,0.6)] backdrop-blur-xl focus:outline-none cursor-pointer"
           aria-label="Open AI Command Center"
         >
           {/* Animated beacon core */}
-          <div className="relative w-3.5 h-3.5 flex items-center justify-center">
-            <span className="absolute inset-0 rounded-full border border-violet-400 animate-ping opacity-60" />
-            <span className="w-2 h-2 rounded-full bg-gradient-to-tr from-cyan-400 to-violet-400 shadow-[0_0_8px_#22d3ee]" />
+          <div className="relative w-3 h-3 flex items-center justify-center">
+            <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 shadow-[0_0_6px_#22d3ee]" />
           </div>
 
-          <span className="gradient-accent-text font-bold">AI COMMAND</span>
+          <span className="font-medium text-slate-200">AI COMMAND</span>
 
           <kbd className="hidden sm:inline-block px-1.5 py-0.5 rounded bg-black/40 border border-white/20 text-[10px] font-mono text-slate-300">
             ⌘K
@@ -216,7 +223,7 @@ export const AICommandCenter = memo(function AICommandCenter() {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             transition={{ type: 'spring', damping: 25, stiffness: 320 }}
-            className="fixed bottom-4 sm:bottom-20 right-2 sm:right-6 z-50 w-[460px] max-w-[95vw] h-[580px] max-h-[85vh] flex flex-col rounded-2xl sm:rounded-3xl glass-panel-glow border border-violet-500/40 shadow-[0_25px_70px_rgba(0,0,0,0.85)] overflow-hidden pointer-events-auto"
+            className="fixed bottom-4 sm:bottom-20 right-2 sm:right-6 z-50 w-[460px] max-w-[95vw] h-[580px] max-h-[85vh] flex flex-col rounded-2xl sm:rounded-3xl bg-[#090915]/95 border border-white/[0.1] shadow-[0_25px_70px_rgba(0,0,0,0.85)] overflow-hidden pointer-events-auto backdrop-blur-2xl"
             role="dialog"
             aria-label="ORBIT AI Command Center"
           >
