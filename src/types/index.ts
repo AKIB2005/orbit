@@ -21,8 +21,60 @@ export interface Project {
   position: [number, number, number];
   notes?: string;
   targetDate?: number | null;
+  github?: GitHubRepoConfig | null;
   createdAt: number;
   updatedAt: number;
+}
+
+export interface GitHubRepoConfig {
+  owner: string;
+  repo: string;
+  connectedAt: number;
+  syncIssues: boolean;
+}
+
+export interface GitHubRepoInsights {
+  name: string;
+  fullName: string;
+  description: string;
+  stars: number;
+  forks: number;
+  openIssues: number;
+  openPulls: number;
+  defaultBranch: string;
+  languages: Record<string, number>;
+  recentCommits: {
+    sha: string;
+    message: string;
+    author: string;
+    date: string;
+    url: string;
+  }[];
+  recentIssues: {
+    number: number;
+    title: string;
+    state: string;
+    author: string;
+    createdAt: string;
+    labels: string[];
+    url: string;
+  }[];
+}
+
+export interface ToastNotification {
+  id: string;
+  type: 'info' | 'success' | 'warning' | 'error';
+  title: string;
+  message?: string;
+  duration?: number;
+}
+
+export interface AuthUser {
+  id: string;
+  email?: string;
+  name?: string;
+  avatarUrl?: string;
+  provider?: string;
 }
 
 export interface Task {
@@ -36,6 +88,7 @@ export interface Task {
   orbitIndex: number;
   dependsOnTaskId?: string | null;
   milestoneId?: string | null;
+  githubIssueNumber?: number;
   createdAt: number;
   updatedAt: number;
 }
@@ -51,10 +104,13 @@ export interface UIState {
   selectedProjectId: string | null;
   hoveredProjectId: string | null;
   panelOpen: boolean;
-  panelView: 'overview' | 'tasks' | 'milestones' | 'notes' | 'dependencies' | 'settings';
+  panelView: 'overview' | 'tasks' | 'milestones' | 'notes' | 'dependencies' | 'insights' | 'timeline' | 'settings';
   contextMenu: { x: number; y: number; targetId?: string } | null;
   cameraTarget: [number, number, number];
   editingTaskId: string | null;
+  authModalOpen: boolean;
+  githubModalOpen: boolean;
+  viewMode: '3d' | '2d';
 }
 
 export interface AppSettings {
@@ -62,6 +118,7 @@ export interface AppSettings {
   animateOrbits: boolean;
   reducedMotion: boolean;
   onboardingComplete: boolean;
+  autoSyncCloud: boolean;
 }
 
 export const COLOR_THEME_MAP: Record<ColorTheme, { primary: string; glow: string; satellite: string }> = {

@@ -93,7 +93,7 @@ export const DependencyManager = memo(function DependencyManager({
           <button
             onClick={handleAdd}
             disabled={!selectedTarget}
-            className="px-4 py-2 bg-gradient-to-r from-violet-600 to-cyan-500 hover:from-violet-500 hover:to-cyan-400 disabled:opacity-40 text-white rounded-xl text-xs font-display font-semibold tracking-wider uppercase transition-all"
+            className="px-4 py-2 bg-white hover:bg-slate-100 disabled:opacity-40 text-[#05050d] rounded-xl text-xs font-display font-medium tracking-wider uppercase transition-all shadow-sm active:scale-95 cursor-pointer"
           >
             Link Conduit
           </button>

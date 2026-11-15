@@ -88,6 +88,52 @@ export const ProjectSettings = memo(function ProjectSettings({ projectId }: Proj
         </div>
       </div>
 
+      {/* GitHub Integration */}
+      <div className="pt-4 border-t border-white/[0.08]">
+        <label className="text-xs text-text-muted block mb-2 font-mono uppercase tracking-wider">
+          GitHub Repository (Read-Only Enclave)
+        </label>
+        {project.github ? (
+          <div className="p-3.5 rounded-xl bg-white/[0.02] border border-white/[0.08] space-y-2.5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_6px_#34d399]" />
+                <span className="text-xs font-mono text-white font-medium">
+                  {project.github.owner}/{project.github.repo}
+                </span>
+              </div>
+              <span className="text-[10px] font-mono text-emerald-400 uppercase">
+                Active Enclave
+              </span>
+            </div>
+            <div className="flex gap-2 pt-1">
+              <button
+                type="button"
+                onClick={() => useOrbitStore.getState().setGitHubModalOpen(true)}
+                className="flex-1 py-1.5 px-3 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] text-xs font-mono text-slate-300 hover:text-white transition-colors cursor-pointer"
+              >
+                Inspect Telemetry
+              </button>
+              <button
+                type="button"
+                onClick={() => useOrbitStore.getState().disconnectProjectGitHub(projectId)}
+                className="py-1.5 px-3 rounded-lg text-xs font-mono text-slate-500 hover:text-red-400 transition-colors cursor-pointer"
+              >
+                Unlink
+              </button>
+            </div>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => useOrbitStore.getState().setGitHubModalOpen(true)}
+            className="w-full py-2.5 px-4 rounded-xl bg-white/[0.03] hover:bg-white/[0.06] border border-white/[0.08] text-xs font-mono text-slate-300 hover:text-white transition-colors flex items-center justify-center gap-2 cursor-pointer"
+          >
+            <span>+ Attach GitHub Repository</span>
+          </button>
+        )}
+      </div>
+
       {/* Danger Zone */}
       <div className="pt-4 border-t border-border">
         {!showDeleteConfirm ? (

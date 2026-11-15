@@ -1,9 +1,30 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { get as idbGet, set as idbSet, del as idbDel } from 'idb-keyval';
-import type { Project, Task, DependencyLink, Milestone, UIState, AppSettings } from '../types';
+import type {
+  Project,
+  Task,
+  DependencyLink,
+  Milestone,
+  UIState,
+  AppSettings,
+  AuthUser,
+  ToastNotification,
+  GitHubRepoConfig,
+} from '../types';
 import { createId } from '../utils/id';
 import { generateSeedData } from '../utils/seed';
+import {
+  syncProjectToCloud,
+  deleteProjectFromCloud,
+  syncTaskToCloud,
+  deleteTaskFromCloud,
+  syncMilestoneToCloud,
+  deleteMilestoneFromCloud,
+  syncLinkToCloud,
+  deleteLinkFromCloud,
+  fetchCloudWorkspace,
+} from '../lib/supabaseClient';
 
 interface OrbitStore {
   projects: Record<string, Project>;
@@ -12,11 +33,24 @@ interface OrbitStore {
   milestones: Record<string, Milestone>;
   settings: AppSettings;
   ui: UIState;
+  user: AuthUser | null;
+  isAuthLoading: boolean;
+  toasts: ToastNotification[];
+
+  // Toast Actions
+  addToast: (toast: Omit<ToastNotification, 'id'>) => string;
+  removeToast: (id: string) => void;
+
+  // Auth & Cloud Sync Actions
+  setUser: (user: AuthUser | null) => void;
+  syncWithCloud: () => Promise<void>;
 
   // Project Actions
   createProject: (data: Omit<Project, 'id' | 'createdAt' | 'updatedAt'>) => string;
   updateProject: (id: string, patch: Partial<Project>) => void;
   deleteProject: (id: string) => void;
+  connectProjectGitHub: (projectId: string, config: GitHubRepoConfig) => void;
+  disconnectProjectGitHub: (projectId: string) => void;
 
   // Task Actions
   createTask: (data: Omit<Task, 'id' | 'createdAt' | 'updatedAt' | 'orbitIndex'>) => string;
@@ -24,6 +58,10 @@ interface OrbitStore {
   deleteTask: (id: string) => void;
   cycleTaskStatus: (id: string) => void;
   toggleTaskComplete: (id: string) => void;
+  syncGitHubIssuesAsTasks: (
+    projectId: string,
+    issues: Array<{ number: number; title: string; labels?: string[] }>
+  ) => number;
 
   // Milestone Actions
   createMilestone: (data: Omit<Milestone, 'id' | 'createdAt'>) => string;
@@ -42,6 +80,9 @@ interface OrbitStore {
   closePanel: () => void;
   setContextMenu: (menu: UIState['contextMenu']) => void;
   setCameraTarget: (pos: [number, number, number]) => void;
+  setAuthModalOpen: (open: boolean) => void;
+  setGitHubModalOpen: (open: boolean) => void;
+  setViewMode: (mode: '3d' | '2d') => void;
   updateSettings: (patch: Partial<AppSettings>) => void;
 }
 
@@ -53,6 +94,9 @@ const defaultUI: UIState = {
   contextMenu: null,
   cameraTarget: [0, 0, 0],
   editingTaskId: null,
+  authModalOpen: false,
+  githubModalOpen: false,
+  viewMode: '3d',
 };
 
 const defaultSettings: AppSettings = {
@@ -60,6 +104,7 @@ const defaultSettings: AppSettings = {
   animateOrbits: true,
   reducedMotion: typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches,
   onboardingComplete: false,
+  autoSyncCloud: true,
 };
 
 const idbStorage = createJSONStorage(() => ({
@@ -101,70 +146,180 @@ export const useOrbitStore = create<OrbitStore>()(
       milestones: {},
       settings: defaultSettings,
       ui: defaultUI,
+      user: null,
+      isAuthLoading: false,
+      toasts: [],
 
+      // Toast Actions
+      addToast: (toast) => {
+        const id = createId();
+        const newToast: ToastNotification = { ...toast, id };
+        set((s) => ({ toasts: [...s.toasts.slice(-4), newToast] }));
+        if (toast.duration !== 0) {
+          setTimeout(() => {
+            get().removeToast(id);
+          }, toast.duration || 4000);
+        }
+        return id;
+      },
+
+      removeToast: (id) => {
+        set((s) => ({ toasts: s.toasts.filter((t) => t.id !== id) }));
+      },
+
+      // Auth & Cloud Sync Actions
+      setUser: (user) => {
+        set({ user });
+        if (user) {
+          get().syncWithCloud();
+        }
+      },
+
+      syncWithCloud: async () => {
+        const { user } = get();
+        if (!user) return;
+        set({ isAuthLoading: true });
+        try {
+          const cloudData = await fetchCloudWorkspace(user.id);
+          if (cloudData && Object.keys(cloudData.projects).length > 0) {
+            set({
+              projects: cloudData.projects,
+              tasks: cloudData.tasks,
+              milestones: cloudData.milestones,
+              links: cloudData.links,
+              isAuthLoading: false,
+            });
+            get().addToast({
+              type: 'success',
+              title: 'Cloud Telemetry Synchronized',
+              message: 'Your cosmic workspace was hydrated from Supabase.',
+            });
+          } else {
+            // Push current local projects to cloud for the newly signed in user
+            const currentProjects = Object.values(get().projects);
+            const currentTasks = Object.values(get().tasks);
+            const currentMilestones = Object.values(get().milestones);
+            const currentLinks = Object.values(get().links);
+
+            for (const p of currentProjects) await syncProjectToCloud(user.id, p);
+            for (const t of currentTasks) await syncTaskToCloud(user.id, t);
+            for (const m of currentMilestones) await syncMilestoneToCloud(user.id, m);
+            for (const l of currentLinks) await syncLinkToCloud(user.id, l);
+
+            set({ isAuthLoading: false });
+          }
+        } catch (err) {
+          console.warn('Cloud sync failure:', err);
+          set({ isAuthLoading: false });
+        }
+      },
+
+      // Project Actions
       createProject: (data) => {
         const id = createId();
         const now = Date.now();
         const project: Project = { ...data, id, createdAt: now, updatedAt: now };
         set((s) => ({ projects: { ...s.projects, [id]: project } }));
+
+        const { user, settings } = get();
+        if (user && settings.autoSyncCloud) {
+          syncProjectToCloud(user.id, project);
+        }
         return id;
       },
 
       updateProject: (id, patch) => {
-        set((s) => {
-          const existing = s.projects[id];
-          if (!existing) return s;
-          return {
-            projects: { ...s.projects, [id]: { ...existing, ...patch, updatedAt: Date.now() } },
-          };
-        });
+        const current = get().projects[id];
+        if (!current) return;
+        const updated: Project = { ...current, ...patch, updatedAt: Date.now() };
+        set((s) => ({ projects: { ...s.projects, [id]: updated } }));
+
+        const { user, settings } = get();
+        if (user && settings.autoSyncCloud) {
+          syncProjectToCloud(user.id, updated);
+        }
       },
 
       deleteProject: (id) => {
         set((s) => {
           const projects = { ...s.projects };
           delete projects[id];
-
           const tasks: Record<string, Task> = {};
-          for (const [tid, task] of Object.entries(s.tasks)) {
-            if (task.projectId !== id) tasks[tid] = task;
+          for (const [tId, t] of Object.entries(s.tasks)) {
+            if (t.projectId !== id) tasks[tId] = t;
           }
-
           const links: Record<string, DependencyLink> = {};
-          for (const [lid, link] of Object.entries(s.links)) {
-            if (link.sourceProjectId !== id && link.targetProjectId !== id) links[lid] = link;
+          for (const [lId, l] of Object.entries(s.links)) {
+            if (l.sourceProjectId !== id && l.targetProjectId !== id) links[lId] = l;
           }
-
           const milestones: Record<string, Milestone> = {};
-          for (const [mid, milestone] of Object.entries(s.milestones)) {
-            if (milestone.projectId !== id) milestones[mid] = milestone;
+          for (const [mId, m] of Object.entries(s.milestones)) {
+            if (m.projectId !== id) milestones[mId] = m;
           }
-
           return {
             projects,
             tasks,
             links,
             milestones,
-            ui: s.ui.selectedProjectId === id ? { ...s.ui, selectedProjectId: null, panelOpen: false } : s.ui,
+            ui: {
+              ...s.ui,
+              selectedProjectId: s.ui.selectedProjectId === id ? null : s.ui.selectedProjectId,
+              panelOpen: s.ui.selectedProjectId === id ? false : s.ui.panelOpen,
+            },
           };
+        });
+
+        const { user, settings } = get();
+        if (user && settings.autoSyncCloud) {
+          deleteProjectFromCloud(user.id, id);
+        }
+      },
+
+      connectProjectGitHub: (projectId, config) => {
+        get().updateProject(projectId, { github: config });
+        get().addToast({
+          type: 'success',
+          title: 'GitHub Enclave Attached',
+          message: `Connected ${config.owner}/${config.repo} (Read-Only).`,
         });
       },
 
+      disconnectProjectGitHub: (projectId) => {
+        get().updateProject(projectId, { github: null });
+        get().addToast({
+          type: 'info',
+          title: 'GitHub Disconnected',
+          message: 'Repository linkage removed from project.',
+        });
+      },
+
+      // Task Actions
       createTask: (data) => {
         const id = createId();
         const now = Date.now();
-        const orbitIndex = Object.values(get().tasks).filter((t) => t.projectId === data.projectId).length;
+        const projectTasks = Object.values(get().tasks).filter((t) => t.projectId === data.projectId);
+        const orbitIndex = projectTasks.length;
         const task: Task = { ...data, id, orbitIndex, createdAt: now, updatedAt: now };
+
         set((s) => ({ tasks: { ...s.tasks, [id]: task } }));
+
+        const { user, settings } = get();
+        if (user && settings.autoSyncCloud) {
+          syncTaskToCloud(user.id, task);
+        }
         return id;
       },
 
       updateTask: (id, patch) => {
-        set((s) => {
-          const existing = s.tasks[id];
-          if (!existing) return s;
-          return { tasks: { ...s.tasks, [id]: { ...existing, ...patch, updatedAt: Date.now() } } };
-        });
+        const current = get().tasks[id];
+        if (!current) return;
+        const updated: Task = { ...current, ...patch, updatedAt: Date.now() };
+        set((s) => ({ tasks: { ...s.tasks, [id]: updated } }));
+
+        const { user, settings } = get();
+        if (user && settings.autoSyncCloud) {
+          syncTaskToCloud(user.id, updated);
+        }
       },
 
       deleteTask: (id) => {
@@ -173,53 +328,95 @@ export const useOrbitStore = create<OrbitStore>()(
           delete tasks[id];
           return { tasks };
         });
+
+        const { user, settings } = get();
+        if (user && settings.autoSyncCloud) {
+          deleteTaskFromCloud(user.id, id);
+        }
       },
 
       cycleTaskStatus: (id) => {
-        const cycle: Record<string, string> = { todo: 'in_progress', in_progress: 'done', done: 'todo' };
-        set((s) => {
-          const task = s.tasks[id];
-          if (!task) return s;
-          const nextStatus = cycle[task.status] as Task['status'];
-          return { tasks: { ...s.tasks, [id]: { ...task, status: nextStatus, updatedAt: Date.now() } } };
-        });
+        const task = get().tasks[id];
+        if (!task) return;
+        const next: Record<Task['status'], Task['status']> = {
+          todo: 'in_progress',
+          in_progress: 'done',
+          done: 'todo',
+        };
+        get().updateTask(id, { status: next[task.status] });
       },
 
       toggleTaskComplete: (id) => {
-        set((s) => {
-          const task = s.tasks[id];
-          if (!task) return s;
-          const nextStatus: Task['status'] = task.status === 'done' ? 'todo' : 'done';
-          return { tasks: { ...s.tasks, [id]: { ...task, status: nextStatus, updatedAt: Date.now() } } };
-        });
+        const task = get().tasks[id];
+        if (!task) return;
+        get().updateTask(id, { status: task.status === 'done' ? 'todo' : 'done' });
       },
 
+      syncGitHubIssuesAsTasks: (projectId, issues) => {
+        let count = 0;
+        const existingTasks = Object.values(get().tasks).filter((t) => t.projectId === projectId);
+        const existingIssueNumbers = new Set(existingTasks.map((t) => t.githubIssueNumber).filter(Boolean));
+
+        for (const issue of issues) {
+          if (existingIssueNumbers.has(issue.number)) continue;
+          let priority: Task['priority'] = 'medium';
+          const labels = (issue.labels || []).map((l) => l.toLowerCase());
+          if (labels.some((l) => l.includes('critical') || l.includes('urgent') || l.includes('p0'))) {
+            priority = 'critical';
+          } else if (labels.some((l) => l.includes('bug') || l.includes('high') || l.includes('p1'))) {
+            priority = 'high';
+          }
+
+          get().createTask({
+            projectId,
+            title: `#${issue.number} ${issue.title}`,
+            description: `Imported from GitHub issue #${issue.number}`,
+            status: 'todo',
+            priority,
+            dueDate: null,
+          });
+          count++;
+        }
+
+        if (count > 0) {
+          get().addToast({
+            type: 'success',
+            title: 'GitHub Issues Synchronized',
+            message: `Deployed ${count} issue satellite tasks to this world.`,
+          });
+        }
+        return count;
+      },
+
+      // Milestone Actions
       createMilestone: (data) => {
         const id = createId();
         const milestone: Milestone = { ...data, id, createdAt: Date.now() };
         set((s) => ({ milestones: { ...s.milestones, [id]: milestone } }));
+
+        const { user, settings } = get();
+        if (user && settings.autoSyncCloud) {
+          syncMilestoneToCloud(user.id, milestone);
+        }
         return id;
       },
 
       updateMilestone: (id, patch) => {
-        set((s) => {
-          const existing = s.milestones[id];
-          if (!existing) return s;
-          return { milestones: { ...s.milestones, [id]: { ...existing, ...patch } } };
-        });
+        const current = get().milestones[id];
+        if (!current) return;
+        const updated: Milestone = { ...current, ...patch };
+        set((s) => ({ milestones: { ...s.milestones, [id]: updated } }));
+
+        const { user, settings } = get();
+        if (user && settings.autoSyncCloud) {
+          syncMilestoneToCloud(user.id, updated);
+        }
       },
 
       toggleMilestone: (id) => {
-        set((s) => {
-          const milestone = s.milestones[id];
-          if (!milestone) return s;
-          return {
-            milestones: {
-              ...s.milestones,
-              [id]: { ...milestone, completed: !milestone.completed },
-            },
-          };
-        });
+        const m = get().milestones[id];
+        if (!m) return;
+        get().updateMilestone(id, { completed: !m.completed });
       },
 
       deleteMilestone: (id) => {
@@ -228,19 +425,30 @@ export const useOrbitStore = create<OrbitStore>()(
           delete milestones[id];
           return { milestones };
         });
+
+        const { user, settings } = get();
+        if (user && settings.autoSyncCloud) {
+          deleteMilestoneFromCloud(user.id, id);
+        }
       },
 
+      // Dependency Actions
       createLink: (sourceId, targetId) => {
         if (sourceId === targetId) return null;
-        const state = get();
-        const exists = Object.values(state.links).some(
-          (l) => l.sourceProjectId === sourceId && l.targetProjectId === targetId
-        );
-        if (exists) return null;
-        if (hasCycle(state.links, sourceId, targetId)) return null;
+        const links = get().links;
+        for (const l of Object.values(links)) {
+          if (l.sourceProjectId === sourceId && l.targetProjectId === targetId) return null;
+        }
+        if (hasCycle(links, sourceId, targetId)) return null;
+
         const id = createId();
         const link: DependencyLink = { id, sourceProjectId: sourceId, targetProjectId: targetId, createdAt: Date.now() };
         set((s) => ({ links: { ...s.links, [id]: link } }));
+
+        const { user, settings } = get();
+        if (user && settings.autoSyncCloud) {
+          syncLinkToCloud(user.id, link);
+        }
         return id;
       },
 
@@ -250,16 +458,20 @@ export const useOrbitStore = create<OrbitStore>()(
           delete links[id];
           return { links };
         });
+
+        const { user, settings } = get();
+        if (user && settings.autoSyncCloud) {
+          deleteLinkFromCloud(user.id, id);
+        }
       },
 
+      // UI Actions
       selectProject: (id) => {
         set((s) => ({
           ui: {
             ...s.ui,
             selectedProjectId: id,
             panelOpen: id !== null,
-            panelView: id !== null ? (s.ui.panelView || 'overview') : s.ui.panelView,
-            editingTaskId: null,
           },
         }));
       },
@@ -269,11 +481,17 @@ export const useOrbitStore = create<OrbitStore>()(
       },
 
       openPanel: (view) => {
-        set((s) => ({ ui: { ...s.ui, panelOpen: true, panelView: view ?? s.ui.panelView } }));
+        set((s) => ({
+          ui: {
+            ...s.ui,
+            panelOpen: true,
+            panelView: view ?? s.ui.panelView,
+          },
+        }));
       },
 
       closePanel: () => {
-        set((s) => ({ ui: { ...s.ui, panelOpen: false, selectedProjectId: null, editingTaskId: null } }));
+        set((s) => ({ ui: { ...s.ui, panelOpen: false, selectedProjectId: null } }));
       },
 
       setContextMenu: (menu) => {
@@ -282,6 +500,18 @@ export const useOrbitStore = create<OrbitStore>()(
 
       setCameraTarget: (pos) => {
         set((s) => ({ ui: { ...s.ui, cameraTarget: pos } }));
+      },
+
+      setAuthModalOpen: (open) => {
+        set((s) => ({ ui: { ...s.ui, authModalOpen: open } }));
+      },
+
+      setGitHubModalOpen: (open) => {
+        set((s) => ({ ui: { ...s.ui, githubModalOpen: open } }));
+      },
+
+      setViewMode: (mode) => {
+        set((s) => ({ ui: { ...s.ui, viewMode: mode } }));
       },
 
       updateSettings: (patch) => {
@@ -316,7 +546,7 @@ export const useOrbitStore = create<OrbitStore>()(
             state.tasks = tasks;
             state.links = links;
             state.milestones = milestones;
-            state.settings = { ...state.settings, onboardingComplete: false };
+            state.settings = { ...state.settings, onboardingComplete: false, autoSyncCloud: true };
             useOrbitStore.setState({ projects, tasks, links, milestones, settings: state.settings });
           }
         };

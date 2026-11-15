@@ -9,6 +9,8 @@ import { MilestonesTab } from './MilestonesTab';
 import { ProjectNotesTab } from './ProjectNotesTab';
 import { DependencyManager } from './DependencyManager';
 import { ProjectSettings } from './ProjectSettings';
+import { ProjectInsightsTab } from './insights/ProjectInsightsTab';
+import { ProjectTimelineTab } from './timeline/ProjectTimelineTab';
 
 export const SlidePanel = memo(function SlidePanel() {
   const panelOpen = useOrbitStore((s) => s.ui.panelOpen);
@@ -36,6 +38,10 @@ export const SlidePanel = memo(function SlidePanel() {
         return <ProjectOverviewTab projectId={selectedProjectId} />;
       case 'tasks':
         return <TaskList projectId={selectedProjectId} />;
+      case 'insights':
+        return <ProjectInsightsTab projectId={selectedProjectId} />;
+      case 'timeline':
+        return <ProjectTimelineTab projectId={selectedProjectId} />;
       case 'milestones':
         return <MilestonesTab projectId={selectedProjectId} />;
       case 'notes':

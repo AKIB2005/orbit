@@ -71,7 +71,7 @@ export const MilestonesTab = memo(function MilestonesTab({ projectId }: Mileston
           <button
             type="submit"
             disabled={!newTitle.trim()}
-            className="px-4 py-1.5 bg-violet-600 hover:bg-violet-500 disabled:opacity-40 text-white rounded-lg text-xs font-mono font-medium transition-colors"
+            className="px-4 py-1.5 bg-white hover:bg-slate-100 disabled:opacity-40 text-[#05050d] rounded-lg text-xs font-mono font-medium transition-colors shadow-sm active:scale-95 cursor-pointer"
           >
             Add Stage
           </button>

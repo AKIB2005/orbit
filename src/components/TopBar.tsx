@@ -7,6 +7,10 @@ interface TopBarProps {
 
 export const TopBar = memo(function TopBar({ onReturnToLanding }: TopBarProps) {
   const projectCount = useOrbitStore((s) => Object.keys(s.projects).length);
+  const user = useOrbitStore((s) => s.user);
+  const viewMode = useOrbitStore((s) => s.ui.viewMode);
+  const setViewMode = useOrbitStore((s) => s.setViewMode);
+  const setAuthModalOpen = useOrbitStore((s) => s.setAuthModalOpen);
   const [showHelp, setShowHelp] = useState(false);
 
   useEffect(() => {
@@ -66,7 +70,34 @@ export const TopBar = memo(function TopBar({ onReturnToLanding }: TopBarProps) {
         </div>
 
         {/* Right: Actions */}
-        <div className="pointer-events-auto flex items-center gap-1.5 sm:gap-2.5">
+        <div className="pointer-events-auto flex items-center gap-1.5 sm:gap-2">
+          {/* View Mode Toggle: 3D Universe vs 2D Radar */}
+          <button
+            onClick={() => setViewMode(viewMode === '3d' ? '2d' : '3d')}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-mono rounded-lg bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-slate-300 hover:text-white transition-colors cursor-pointer"
+            title="Toggle between 3D Universe and 2D Radar Map (Mobile Fallback)"
+            aria-label="Toggle 2D Radar or 3D Universe view"
+          >
+            <span className="text-[10px] text-slate-500 font-bold">VIEW:</span>
+            <span className="font-semibold text-cyan-300">{viewMode.toUpperCase()}</span>
+          </button>
+
+          {/* Cloud Vault / Auth Status */}
+          <button
+            onClick={() => setAuthModalOpen(true)}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-mono rounded-lg bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-slate-300 hover:text-white transition-colors cursor-pointer"
+            title="Open Supabase Cloud Vault & Identity"
+            aria-label="Cloud Identity & Vault"
+          >
+            <span
+              className={`w-1.5 h-1.5 rounded-full ${
+                user ? 'bg-emerald-400 shadow-[0_0_6px_#34d399]' : 'bg-slate-500'
+              }`}
+            />
+            <span className="hidden sm:inline">{user ? user.name || 'Cloud' : 'Cloud Vault'}</span>
+            <span className="sm:hidden">{user ? 'Vault' : 'Cloud'}</span>
+          </button>
+
           <button
             onClick={() => document.dispatchEvent(new CustomEvent('orbit:toggle-ai'))}
             className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 text-xs font-mono rounded-lg bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-slate-300 hover:text-white transition-colors cursor-pointer"

@@ -22,6 +22,8 @@ export const TabBar = memo(function TabBar() {
   const tabs: { key: UIState['panelView']; label: string; count?: number }[] = [
     { key: 'overview', label: 'Overview' },
     { key: 'tasks', label: 'Tasks', count: taskCount },
+    { key: 'insights', label: 'Insights' },
+    { key: 'timeline', label: 'Timeline' },
     { key: 'milestones', label: 'Milestones', count: milestoneCount },
     { key: 'notes', label: 'Notes' },
     { key: 'dependencies', label: 'Links' },

@@ -5,6 +5,9 @@ import { ContextMenu } from './ContextMenu';
 import { CreateProjectDialog } from './CreateProjectDialog';
 import { ConstellationNavigator } from './ConstellationNavigator';
 import { AICommandCenter } from './ai/AICommandCenter';
+import { AuthModal } from './auth/AuthModal';
+import { GitHubIntegrationModal } from './github/GitHubIntegrationModal';
+import { ToastContainer } from './common/ToastContainer';
 
 interface UIOverlayProps {
   onReturnToLanding?: () => void;
@@ -19,6 +22,9 @@ export const UIOverlay = memo(function UIOverlay({ onReturnToLanding }: UIOverla
       <AICommandCenter />
       <ContextMenu />
       <CreateProjectDialog />
+      <AuthModal />
+      <GitHubIntegrationModal />
+      <ToastContainer />
     </div>
   );
 });

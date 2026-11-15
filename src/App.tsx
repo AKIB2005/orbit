@@ -1,10 +1,13 @@
 import { useState, useEffect, useCallback } from 'react';
 import { SceneWrapper } from './scene/SceneWrapper';
+import { CosmicRadar2D } from './components/radar/CosmicRadar2D';
 import { UIOverlay } from './components/UIOverlay';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { LandingPage } from './components/landing/LandingPage';
+import { useOrbitStore } from './store/useOrbitStore';
 
 export default function App() {
+  const viewMode = useOrbitStore((s) => s.ui.viewMode);
   const [view, setView] = useState<'landing' | 'workspace'>(() => {
     if (typeof window !== 'undefined' && window.location.hash === '#workspace') {
       return 'workspace';
@@ -41,7 +44,7 @@ export default function App() {
         <LandingPage onEnterOrbit={handleEnterOrbit} />
       ) : (
         <div className="relative w-full h-screen bg-[#030308] overflow-hidden">
-          <SceneWrapper />
+          {viewMode === '3d' ? <SceneWrapper /> : <CosmicRadar2D />}
           <UIOverlay onReturnToLanding={handleReturnToLanding} />
         </div>
       )}
