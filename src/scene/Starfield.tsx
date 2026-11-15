@@ -1,94 +1,120 @@
-import { useRef, useMemo, useEffect, memo } from 'react';
-import { useFrame } from '@react-three/fiber';
+import { useRef, useMemo, memo } from 'react';
+import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useOrbitStore } from '../store/useOrbitStore';
 
-const STAR_COUNT = 2400;
+const STAR_COUNT = 2200;
 
+/** Small seeded PRNG so the sky is identical on every mount (no re-rolled constellations). */
+function mulberry32(seed: number) {
+  return () => {
+    seed |= 0;
+    seed = (seed + 0x6d2b79f5) | 0;
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+const VERT = /* glsl */ `
+  attribute float aSize;
+  attribute float aPhase;
+  attribute vec3 aColor;
+  uniform float uTime;
+  uniform float uPixelRatio;
+  uniform float uTwinkle;
+  varying vec3 vColor;
+  varying float vAlpha;
+  void main() {
+    vec4 mv = modelViewMatrix * vec4(position, 1.0);
+    float tw = 1.0 - uTwinkle * (0.5 + 0.5 * sin(uTime * (0.6 + aPhase * 1.4) + aPhase * 40.0)) * 0.55;
+    gl_PointSize = aSize * tw * uPixelRatio * (60.0 / -mv.z);
+    gl_Position = projectionMatrix * mv;
+    vColor = aColor;
+    vAlpha = tw;
+  }
+`;
+const FRAG = /* glsl */ `
+  varying vec3 vColor;
+  varying float vAlpha;
+  void main() {
+    float d = length(gl_PointCoord - 0.5);
+    float a = smoothstep(0.5, 0.0, d);
+    gl_FragColor = vec4(vColor, a * a * vAlpha);
+  }
+`;
+
+/**
+ * Starfield as one Points draw call. Twinkle runs in the vertex shader from a time uniform,
+ * so there is zero per-frame CPU work or buffer upload (previously 40 matrix writes + upload / frame).
+ */
 export const Starfield = memo(function Starfield() {
-  const meshRef = useRef<THREE.InstancedMesh>(null);
-  const dummy = useMemo(() => new THREE.Object3D(), []);
+  const pointsRef = useRef<THREE.Points>(null);
   const reducedMotion = useOrbitStore((s) => s.settings.reducedMotion);
+  const dpr = useThree((s) => s.viewport.dpr);
 
-  // Generate star positions, sizes, and colors
-  const [positions, scales] = useMemo(() => {
-    const pos: [number, number, number][] = [];
-    const sca: number[] = [];
+  const { geometry, material } = useMemo(() => {
+    const rand = mulberry32(0x0b17);
+    const pos = new Float32Array(STAR_COUNT * 3);
+    const size = new Float32Array(STAR_COUNT);
+    const phase = new Float32Array(STAR_COUNT);
+    const col = new Float32Array(STAR_COUNT * 3);
+    // Cool-white dominant, with a few warm and blue stars for realism
+    const palette = ['#ffffff', '#e2e8f0', '#bfdbfe', '#c4b5fd', '#fde68a'].map((c) => new THREE.Color(c));
+    const weights = [0.4, 0.3, 0.15, 0.08, 0.07];
 
     for (let i = 0; i < STAR_COUNT; i++) {
-      const theta = Math.random() * Math.PI * 2;
-      const phi = Math.acos(Math.random() * 2 - 1);
-      // Sphere between radius 30 and 70
-      const r = 28 + Math.random() * 45;
+      const theta = rand() * Math.PI * 2;
+      const phi = Math.acos(rand() * 2 - 1);
+      const r = 40 + rand() * 60;
+      pos[i * 3] = r * Math.sin(phi) * Math.cos(theta);
+      pos[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
+      pos[i * 3 + 2] = r * Math.cos(phi);
 
-      pos.push([
-        r * Math.sin(phi) * Math.cos(theta),
-        r * Math.sin(phi) * Math.sin(theta),
-        r * Math.cos(phi),
-      ]);
+      size[i] = rand() < 0.04 ? 2.4 + rand() * 1.6 : 0.8 + rand() * 1.1;
+      phase[i] = rand();
 
-      // Mostly tiny stars, with a few brighter distant beacons
-      const isBeacon = Math.random() < 0.05;
-      sca.push(isBeacon ? 1.5 + Math.random() * 1.0 : 0.4 + Math.random() * 0.8);
+      let pick = rand();
+      let ci = 0;
+      for (; ci < weights.length - 1; ci++) {
+        if (pick < weights[ci]) break;
+        pick -= weights[ci];
+      }
+      const c = palette[ci];
+      col[i * 3] = c.r;
+      col[i * 3 + 1] = c.g;
+      col[i * 3 + 2] = c.b;
     }
-    return [pos, sca];
+
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    g.setAttribute('aSize', new THREE.BufferAttribute(size, 1));
+    g.setAttribute('aPhase', new THREE.BufferAttribute(phase, 1));
+    g.setAttribute('aColor', new THREE.BufferAttribute(col, 3));
+
+    const m = new THREE.ShaderMaterial({
+      vertexShader: VERT,
+      fragmentShader: FRAG,
+      transparent: true,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+      fog: false,
+      uniforms: {
+        uTime: { value: 0 },
+        uPixelRatio: { value: 1 },
+        uTwinkle: { value: 1 },
+      },
+    });
+    return { geometry: g, material: m };
   }, []);
 
-  // Initialize instance matrices once
-  useEffect(() => {
-    if (!meshRef.current) return;
-    const mesh = meshRef.current;
-
-    const colors = [
-      new THREE.Color('#ffffff'),
-      new THREE.Color('#cbd5e1'),
-      new THREE.Color('#93c5fd'),
-      new THREE.Color('#c084fc'),
-      new THREE.Color('#67e8f9'),
-    ];
-
-    positions.forEach((pos, i) => {
-      dummy.position.set(...pos);
-      dummy.scale.setScalar(scales[i]);
-      dummy.updateMatrix();
-      mesh.setMatrixAt(i, dummy.matrix);
-
-      const color = colors[Math.floor(Math.random() * colors.length)];
-      mesh.setColorAt(i, color);
-    });
-
-    mesh.instanceMatrix.needsUpdate = true;
-    if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
-  }, [positions, scales, dummy]);
-
-  // Subtle twinkling on a small subset of stars per frame
-  useFrame(() => {
-    if (reducedMotion || !meshRef.current) return;
-
-    for (let i = 0; i < 40; i++) {
-      const idx = Math.floor(Math.random() * STAR_COUNT);
-      dummy.position.set(...positions[idx]);
-      const twinkle = scales[idx] * (0.6 + Math.random() * 0.8);
-      dummy.scale.setScalar(twinkle);
-      dummy.updateMatrix();
-      meshRef.current.setMatrixAt(idx, dummy.matrix);
-    }
-    meshRef.current.instanceMatrix.needsUpdate = true;
+  useFrame((state, delta) => {
+    material.uniforms.uTime.value = state.clock.elapsedTime;
+    material.uniforms.uPixelRatio.value = dpr;
+    material.uniforms.uTwinkle.value = reducedMotion ? 0 : 1;
+    // A barely perceptible drift gives the backdrop depth against the planets
+    if (!reducedMotion && pointsRef.current) pointsRef.current.rotation.y += delta * 0.0025;
   });
 
-  return (
-    <instancedMesh
-      ref={meshRef}
-      args={[undefined, undefined, STAR_COUNT]}
-      frustumCulled={false}
-    >
-      <sphereGeometry args={[0.04, 6, 6]} />
-      <meshBasicMaterial
-        color="#ffffff"
-        transparent
-        opacity={0.85}
-        blending={THREE.AdditiveBlending}
-      />
-    </instancedMesh>
-  );
+  return <points ref={pointsRef} geometry={geometry} material={material} frustumCulled={false} />;
 });

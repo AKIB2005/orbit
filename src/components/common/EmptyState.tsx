@@ -6,6 +6,19 @@ interface EmptyStateProps {
   description: string;
   actionLabel?: string;
   onAction?: () => void;
+  /** Compact variant for use inside panels. */
+  compact?: boolean;
+}
+
+/** A tiny planet-and-satellite mark: the default "nothing here yet" illustration. */
+function OrbitMark() {
+  return (
+    <svg width="56" height="56" viewBox="0 0 56 56" fill="none" aria-hidden="true">
+      <ellipse cx="28" cy="28" rx="25" ry="10" transform="rotate(-24 28 28)" stroke="rgba(255,255,255,0.14)" strokeDasharray="2 4" />
+      <circle cx="28" cy="28" r="8" fill="rgba(243,238,226,0.9)" />
+      <circle cx="47.5" cy="17.5" r="2.5" fill="#7dd3fc" />
+    </svg>
+  );
 }
 
 export const EmptyState = memo(function EmptyState({
@@ -14,31 +27,19 @@ export const EmptyState = memo(function EmptyState({
   description,
   actionLabel,
   onAction,
+  compact = false,
 }: EmptyStateProps) {
   return (
-    <div className="flex flex-col items-center justify-center p-8 sm:p-12 text-center rounded-2xl bg-white/[0.01] border border-white/[0.04]">
-      {icon ? (
-        <div className="w-12 h-12 rounded-2xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-center text-slate-400 mb-4">
-          {icon}
-        </div>
-      ) : (
-        <div className="relative w-10 h-10 rounded-full border border-dashed border-white/20 flex items-center justify-center mb-4">
-          <div className="w-2 h-2 rounded-full bg-slate-500" />
-        </div>
-      )}
-
-      <h3 className="font-display font-medium text-sm text-slate-200 mb-1.5 tracking-tight">
-        {title}
-      </h3>
-      <p className="text-xs text-slate-400 max-w-sm leading-relaxed mb-6 font-normal">
-        {description}
-      </p>
-
+    <div
+      className={`flex flex-col items-center justify-center text-center rounded-2xl border border-dashed border-white/[0.1] bg-white/[0.015] ${
+        compact ? 'p-6' : 'p-8 sm:p-12'
+      }`}
+    >
+      <div className="mb-4 text-slate-400">{icon ?? <OrbitMark />}</div>
+      <h3 className="font-display font-medium text-base text-white mb-1.5">{title}</h3>
+      <p className="text-sm text-slate-400 max-w-xs leading-relaxed">{description}</p>
       {actionLabel && onAction && (
-        <button
-          onClick={onAction}
-          className="px-4 py-2 rounded-xl text-xs font-display font-medium tracking-wider uppercase bg-white text-[#05050d] hover:bg-slate-100 active:scale-95 transition-all shadow-sm cursor-pointer"
-        >
+        <button onClick={onAction} className="btn btn-primary mt-6">
           {actionLabel}
         </button>
       )}

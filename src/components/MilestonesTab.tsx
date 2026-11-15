@@ -1,4 +1,5 @@
 import { useState, memo, useMemo } from 'react';
+import { Icon } from './ui/Icon';
 import { useOrbitStore } from '../store/useOrbitStore';
 
 interface MilestonesTabProps {
@@ -44,13 +45,13 @@ export const MilestonesTab = memo(function MilestonesTab({ projectId }: Mileston
           Orbital Milestones & Stages
         </h3>
         <p className="text-xs text-slate-400 mt-1">
-          High-level delivery gates coordinating satellite task clusters toward strategic launch.
+          Key delivery goals for this project. Link tasks to a milestone to track progress toward it.
         </p>
       </div>
 
       {/* Create Milestone Form */}
       <form onSubmit={handleAddMilestone} className="glass-panel p-4 rounded-xl border border-white/[0.08] space-y-3">
-        <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400 block">
+        <span className="text-[11px] text-slate-400 block">
           NEW STRATEGIC MILESTONE
         </span>
         <div className="flex flex-col sm:flex-row gap-2">
@@ -60,18 +61,18 @@ export const MilestonesTab = memo(function MilestonesTab({ projectId }: Mileston
             onChange={(e) => setNewTitle(e.target.value)}
             placeholder="e.g. Core Security Audit Complete"
             maxLength={100}
-            className="flex-1 bg-black/40 border border-white/[0.08] rounded-lg px-3 py-1.5 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-violet-500/60"
+            className="field flex-1"
           />
           <input
             type="date"
             value={newDueDate}
             onChange={(e) => setNewDueDate(e.target.value)}
-            className="bg-black/40 border border-white/[0.08] rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-violet-500/60"
+            className="field"
           />
           <button
             type="submit"
             disabled={!newTitle.trim()}
-            className="px-4 py-1.5 bg-white hover:bg-slate-100 disabled:opacity-40 text-[#05050d] rounded-lg text-xs font-mono font-medium transition-colors shadow-sm active:scale-95 cursor-pointer"
+            className="px-4 py-1.5 bg-white hover:bg-slate-100 disabled:opacity-40 text-[#05050d] rounded-lg text-xs font-medium transition-colors shadow-sm active:scale-95 cursor-pointer"
           >
             Add Stage
           </button>
@@ -82,9 +83,8 @@ export const MilestonesTab = memo(function MilestonesTab({ projectId }: Mileston
       <div className="space-y-3">
         {projectMilestones.length === 0 ? (
           <div className="text-center py-10 glass-panel rounded-2xl border border-white/[0.06] text-slate-400">
-            <span className="text-2xl block mb-2">🏁</span>
-            <p className="text-xs font-mono">No milestones registered for this planetary body yet.</p>
-            <p className="text-[11px] text-slate-500 mt-1">Add your first key milestone above.</p>
+            <p className="text-xs">No milestones yet.</p>
+            <p className="text-[11px] text-slate-500 mt-1">Add a key date or delivery goal above.</p>
           </div>
         ) : (
           projectMilestones.map((milestone) => {
@@ -147,13 +147,13 @@ export const MilestonesTab = memo(function MilestonesTab({ projectId }: Mileston
                         {milestone.title}
                       </span>
                       {milestone.completed && (
-                        <span className="text-[10px] font-mono px-2 py-0.2 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                        <span className="text-[11px] px-2 py-0.2 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
                           COMPLETED
                         </span>
                       )}
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-4 mt-2 text-xs font-mono text-slate-400">
+                    <div className="flex flex-wrap items-center gap-4 mt-2 text-xs text-slate-400">
                       {dateStr && (
                         <span className={`flex items-center gap-1 ${isOverdue ? 'text-rose-400 font-semibold' : ''}`}>
                           <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -176,8 +176,9 @@ export const MilestonesTab = memo(function MilestonesTab({ projectId }: Mileston
                     onClick={() => deleteMilestone(milestone.id)}
                     className="text-slate-500 hover:text-rose-400 text-xs p-1"
                     title="Delete milestone"
+                    aria-label="Delete milestone"
                   >
-                    ✕
+                    <Icon name="close" size={14} />
                   </button>
                 </div>
               </div>

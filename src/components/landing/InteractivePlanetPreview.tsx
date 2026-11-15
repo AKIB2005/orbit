@@ -90,18 +90,13 @@ export const InteractivePlanetPreview = memo(function InteractivePlanetPreview({
   const themeColors = COLOR_THEME_MAP[activeTheme];
 
   return (
-    <section id="interactive" className="relative py-32 px-6 max-w-7xl mx-auto">
+    <section id="interactive" className="relative py-24 sm:py-32 px-6 max-w-7xl mx-auto">
       <div className="text-center max-w-3xl mx-auto mb-16">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.03] border border-white/[0.08] text-[11px] font-mono tracking-[0.16em] uppercase text-slate-400 mb-4">
-          <span className="w-1.5 h-1.5 rounded-full bg-slate-300" />
-          <span>Interactive Celestial Staging</span>
-        </div>
         <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl font-normal tracking-tight text-white mb-5">
-          Inspect a <span className="text-transparent bg-clip-text bg-gradient-to-b from-white via-white/95 to-slate-400 font-medium">planetary microcosm</span>
+          Pick a planet. See its tasks.
         </h2>
         <p className="text-base sm:text-lg text-slate-400 leading-relaxed font-normal">
-          Switch atmospheric spectra to observe how projects adapt color identity, orbital speed,
-          and task telemetry in real time.
+          Each color is a project. Tasks orbit it at a speed set by priority.
         </p>
 
         {/* Spectrum Switcher */}
@@ -113,7 +108,7 @@ export const InteractivePlanetPreview = memo(function InteractivePlanetPreview({
               <button
                 key={theme.id}
                 onClick={() => setActiveTheme(theme.id)}
-                className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-mono transition-all duration-200 cursor-pointer ${
+                className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs transition-all duration-200 cursor-pointer ${
                   isSelected
                     ? 'bg-white/[0.08] border-white/20 text-white'
                     : 'bg-white/[0.02] border-white/[0.05] text-slate-400 hover:text-white hover:bg-white/[0.04]'
@@ -173,7 +168,7 @@ export const InteractivePlanetPreview = memo(function InteractivePlanetPreview({
             </div>
 
             {/* Dynamic Status Bar */}
-            <div className="mt-8 flex items-center gap-4 text-xs font-mono text-slate-400">
+            <div className="mt-8 flex items-center gap-4 text-xs text-slate-400">
               <span className="flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_#34d399]" />
                 Orbit Status: STABLE
@@ -193,7 +188,7 @@ export const InteractivePlanetPreview = memo(function InteractivePlanetPreview({
                   className="w-1.5 h-1.5 rounded-full"
                   style={{ backgroundColor: themeColors.primary }}
                 />
-                <span className="text-xs font-mono uppercase tracking-widest text-slate-500">
+                <span className="text-xs   text-slate-500">
                   Active Celestial Entity
                 </span>
               </div>
@@ -207,7 +202,7 @@ export const InteractivePlanetPreview = memo(function InteractivePlanetPreview({
 
             {/* Task Satellite Manifest */}
             <div className="space-y-2">
-              <div className="text-[11px] font-mono text-slate-500 uppercase tracking-wider flex justify-between">
+              <div className="text-[11px] text-slate-500   flex justify-between">
                 <span>Orbiting Task Payloads</span>
                 <span>Velocity</span>
               </div>
@@ -231,13 +226,13 @@ export const InteractivePlanetPreview = memo(function InteractivePlanetPreview({
                       <p className="text-xs font-medium text-slate-200 truncate">
                         {task.title}
                       </p>
-                      <span className="text-[10px] font-mono text-slate-500 uppercase">
+                      <span className="text-[11px] text-slate-500 ">
                         Priority: {task.priority}
                       </span>
                     </div>
                   </div>
 
-                  <span className="text-[11px] font-mono text-slate-400 shrink-0">
+                  <span className="text-[11px] text-slate-400 shrink-0">
                     {task.satelliteSpeed}
                   </span>
                 </div>
@@ -248,7 +243,7 @@ export const InteractivePlanetPreview = memo(function InteractivePlanetPreview({
             <div className="pt-2">
               <button
                 onClick={onEnterOrbit}
-                className="w-full py-3.5 px-4 rounded-xl text-xs font-display font-medium tracking-[0.14em] uppercase text-[#05050d] bg-white hover:bg-slate-100 transition-all shadow-[0_1px_3px_rgba(0,0,0,0.4)] flex items-center justify-center gap-2 active:scale-[0.98] cursor-pointer"
+                className="w-full py-3.5 px-4 rounded-xl text-xs font-display font-medium   text-[#05050d] bg-white hover:bg-slate-100 transition-all shadow-[0_1px_3px_rgba(0,0,0,0.4)] flex items-center justify-center gap-2 active:scale-[0.98] cursor-pointer"
               >
                 <span>Launch System In 3D Orbit</span>
                 <svg className="w-3.5 h-3.5 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor">

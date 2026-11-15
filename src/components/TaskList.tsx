@@ -3,6 +3,8 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { useOrbitStore } from '../store/useOrbitStore';
 import { TaskCard } from './TaskCard';
 import { CreateTaskForm } from './CreateTaskForm';
+import { EmptyState } from './common/EmptyState';
+import { Icon } from './ui/Icon';
 
 interface TaskListProps {
   projectId: string;
@@ -72,17 +74,11 @@ export const TaskList = memo(function TaskList({ projectId }: TaskListProps) {
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search payload title or specification..."
-            className="w-full bg-black/40 border border-white/[0.08] rounded-xl pl-8 pr-3 py-1.5 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-violet-500/60"
+            placeholder="Search tasks…"
+            aria-label="Search tasks"
+            className="field"
           />
-          <svg
-            className="w-3.5 h-3.5 text-slate-500 absolute left-2.5 top-1/2 -translate-y-1/2"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
+          <Icon name="search" size={15} className="text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
         </div>
 
         {/* Filter Pills */}
@@ -90,8 +86,8 @@ export const TaskList = memo(function TaskList({ projectId }: TaskListProps) {
           {(
             [
               { key: 'all', label: 'All', count: counts.all },
-              { key: 'in_progress', label: 'In Flight', count: counts.in_progress },
-              { key: 'todo', label: 'To Do', count: counts.todo },
+              { key: 'in_progress', label: 'In progress', count: counts.in_progress },
+              { key: 'todo', label: 'To do', count: counts.todo },
               { key: 'done', label: 'Done', count: counts.done },
               { key: 'urgent', label: 'Urgent', count: counts.urgent },
             ] as const
@@ -101,14 +97,14 @@ export const TaskList = memo(function TaskList({ projectId }: TaskListProps) {
               <button
                 key={tab.key}
                 onClick={() => setFilter(tab.key)}
-                className={`px-2.5 py-1 rounded-lg text-xs font-mono transition-all flex items-center gap-1.5 whitespace-nowrap ${
+                className={`px-3 py-1.5 rounded-full text-xs transition-colors duration-150 flex items-center gap-1.5 whitespace-nowrap border ${
                   isSelected
-                    ? 'bg-violet-600/30 text-violet-200 border border-violet-500/40 font-medium'
-                    : 'text-slate-400 hover:text-white bg-white/[0.02] border border-transparent'
+                    ? 'bg-white/[0.12] text-white border-white/25 font-medium'
+                    : 'text-slate-400 hover:text-white bg-white/[0.03] border-white/[0.06]'
                 }`}
               >
                 <span>{tab.label}</span>
-                <span className="text-[10px] opacity-70">({tab.count})</span>
+                <span className="text-[11px] opacity-60 tabular-nums">{tab.count}</span>
               </button>
             );
           })}
@@ -117,22 +113,24 @@ export const TaskList = memo(function TaskList({ projectId }: TaskListProps) {
 
       {/* Task List */}
       {filteredTasks.length === 0 ? (
-        <div className="text-center py-12 glass-panel rounded-2xl border border-white/[0.06] text-slate-400">
-          <span className="text-2xl block mb-2">🛰️</span>
-          <p className="text-xs font-mono">No matching task satellites found.</p>
-          {search ? (
-            <button
-              onClick={() => setSearch('')}
-              className="text-xs text-cyan-400 hover:underline mt-1 font-mono"
-            >
-              Clear search filter
-            </button>
-          ) : (
-            <p className="text-[11px] text-slate-500 mt-1">
-              Deploy your first task payload above to initialize orbital trajectory.
-            </p>
-          )}
-        </div>
+        tasks.length === 0 ? (
+          <EmptyState
+            compact
+            title="No tasks yet"
+            description="Add your first task above. Each one becomes a satellite orbiting this planet."
+          />
+        ) : (
+          <EmptyState
+            compact
+            title="No matching tasks"
+            description={search ? `Nothing matches “${search.trim()}”.` : 'No tasks in this filter.'}
+            actionLabel={search ? 'Clear search' : 'Show all tasks'}
+            onAction={() => {
+              setSearch('');
+              setFilter('all');
+            }}
+          />
+        )
       ) : (
         <AnimatePresence mode="popLayout">
           <div className="space-y-2.5">
@@ -143,7 +141,7 @@ export const TaskList = memo(function TaskList({ projectId }: TaskListProps) {
                 initial={{ opacity: 0, y: -8 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, x: 40, transition: { duration: 0.15 } }}
-                transition={{ duration: 0.2 }}
+                transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
               >
                 <TaskCard taskId={task.id} />
               </motion.div>

@@ -1,4 +1,7 @@
 import { memo, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { Icon } from './ui/Icon';
+import { ease } from '../motion/tokens';
 import { useOrbitStore } from '../store/useOrbitStore';
 import { PRIORITY_COLORS } from '../types';
 import { TaskDetail } from './TaskDetail';
@@ -9,8 +12,8 @@ interface TaskCardProps {
 
 const STATUS_LABELS: Record<string, string> = {
   todo: 'To Do',
-  in_progress: 'In Progress',
-  done: 'Completed',
+  in_progress: 'In progress',
+  done: 'Done',
 };
 
 const STATUS_STYLES: Record<string, string> = {
@@ -44,7 +47,7 @@ export const TaskCard = memo(function TaskCard({ taskId }: TaskCardProps) {
     <div
       className={`rounded-xl border transition-all duration-200 overflow-hidden ${task.status === 'done'
           ? 'bg-emerald-950/10 border-emerald-800/20 opacity-80'
-          : 'bg-white/[0.03] border-white/[0.08] hover:border-violet-500/40 hover:bg-white/[0.05]'
+          : 'bg-white/[0.03] border-white/[0.08] hover:border-white/[0.18] hover:bg-white/[0.05]'
         }`}
     >
       <div className="p-3.5 flex items-start gap-3">
@@ -81,7 +84,7 @@ export const TaskCard = memo(function TaskCard({ taskId }: TaskCardProps) {
             {/* Status Cycle Button */}
             <button
               onClick={() => cycleTaskStatus(taskId)}
-              className={`text-[10px] font-mono px-2 py-0.5 rounded-full font-medium border transition-colors ${STATUS_STYLES[task.status]}`}
+              className={`text-[11px] px-2 py-0.5 rounded-full font-medium border transition-colors ${STATUS_STYLES[task.status]}`}
               title="Click to cycle status"
             >
               {STATUS_LABELS[task.status]}
@@ -89,35 +92,35 @@ export const TaskCard = memo(function TaskCard({ taskId }: TaskCardProps) {
 
             {/* Priority Beacon */}
             <span
-              className="text-[10px] font-mono px-2 py-0.5 rounded-full border border-white/10 uppercase flex items-center gap-1.5"
+              className="text-[11px] px-2 py-0.5 rounded-full border border-white/10 flex items-center gap-1.5"
               style={{ color: priorityColor }}
             >
               <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: priorityColor }} />
-              {task.priority}
+              <span className="capitalize">{task.priority}</span>
             </span>
 
             {/* Due Date */}
             {dueStr && (
               <span
-                className={`text-[10px] font-mono flex items-center gap-1 ${isOverdue ? 'text-rose-400 font-semibold' : 'text-slate-400'
+                className={`text-[11px] flex items-center gap-1 ${isOverdue ? 'text-rose-400 font-semibold' : 'text-slate-400'
                   }`}
               >
-                <span>{isOverdue ? '⚠ Due ' : 'Due '}{dueStr}</span>
+                {isOverdue && <Icon name="alert" size={12} />}
+                <span>{isOverdue ? 'Overdue · ' : 'Due '}{dueStr}</span>
               </span>
             )}
 
             {/* Milestone Tag */}
             {milestone && (
-              <span className="text-[10px] font-mono text-cyan-300 flex items-center gap-1 bg-cyan-950/40 border border-cyan-800/40 px-1.5 py-0.2 rounded">
-                <span>🏁</span>
-                <span className="truncate max-w-[120px]">{milestone.title}</span>
+              <span className="text-[11px] text-cyan-300 flex items-center gap-1 bg-cyan-950/40 border border-cyan-800/40 px-1.5 py-0.2 rounded">
+                                <span className="truncate max-w-[120px]">{milestone.title}</span>
               </span>
             )}
 
             {/* Prerequisite Blocker Indicator */}
             {isPrereqBlocked && (
-              <span className="text-[10px] font-mono text-amber-300 flex items-center gap-1 bg-amber-950/40 border border-amber-800/40 px-1.5 py-0.2 rounded">
-                <span>⚡ Blocked by:</span>
+              <span className="text-[11px] text-amber-300 flex items-center gap-1 bg-amber-950/40 border border-amber-800/40 px-1.5 py-0.2 rounded">
+                <span>Blocked by</span>
                 <span className="truncate max-w-[110px]">{prerequisiteTask.title}</span>
               </span>
             )}
@@ -128,25 +131,39 @@ export const TaskCard = memo(function TaskCard({ taskId }: TaskCardProps) {
         <div className="flex items-center gap-1 shrink-0">
           <button
             onClick={() => setExpanded(!expanded)}
-            className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-white hover:bg-white/[0.08] transition-colors text-xs"
+            className="btn-icon"
             aria-label={expanded ? 'Collapse task details' : 'Edit task details'}
+            aria-expanded={expanded}
             title="Edit task details"
           >
-            {expanded ? '▲' : '▼'}
+            <Icon name="chevronDown" size={15} className={`transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`} />
           </button>
           <button
             onClick={() => deleteTask(taskId)}
-            className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 transition-colors text-xs"
+            className="btn-icon hover:!text-rose-400 hover:!bg-rose-500/10"
             aria-label="Delete task"
             title="Delete task"
           >
-            ✕
+            <Icon name="trash" size={14} />
           </button>
         </div>
       </div>
 
       {/* Expanded Inline Detail Editor */}
-      {expanded && <TaskDetail taskId={taskId} />}
+      <AnimatePresence initial={false}>
+        {expanded && (
+          <motion.div
+            key="detail"
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.24, ease: ease.out }}
+            className="overflow-hidden"
+          >
+            <TaskDetail taskId={taskId} />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 });

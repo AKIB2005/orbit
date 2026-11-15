@@ -1,57 +1,48 @@
 import { memo } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useOrbitStore } from '../../store/useOrbitStore';
+import { Icon, type IconName } from '../ui/Icon';
+import { toast as toastVariants } from '../../motion/tokens';
+
+const TONE: Record<string, { icon: IconName; accent: string; text: string }> = {
+  success: { icon: 'check', accent: 'bg-emerald-400', text: 'text-emerald-300' },
+  error: { icon: 'alert', accent: 'bg-rose-400', text: 'text-rose-300' },
+  warning: { icon: 'alert', accent: 'bg-amber-400', text: 'text-amber-300' },
+  info: { icon: 'info', accent: 'bg-sky-300', text: 'text-sky-300' },
+};
 
 export const ToastContainer = memo(function ToastContainer() {
   const toasts = useOrbitStore((s) => s.toasts);
   const removeToast = useOrbitStore((s) => s.removeToast);
 
   return (
-    <div className="fixed top-5 right-5 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none">
-      <AnimatePresence>
-        {toasts.map((toast) => {
-          const borderColor =
-            toast.type === 'success'
-              ? 'border-emerald-500/40 text-emerald-300'
-              : toast.type === 'error'
-              ? 'border-red-500/40 text-red-300'
-              : toast.type === 'warning'
-              ? 'border-amber-500/40 text-amber-300'
-              : 'border-cyan-500/40 text-cyan-300';
-
+    // Sits below the top bar so it never covers its controls
+    <div
+      className="fixed z-[70] top-[calc(max(0.75rem,env(safe-area-inset-top))+3.5rem)] right-3 sm:right-5 left-3 sm:left-auto sm:w-[22rem] flex flex-col gap-2 pointer-events-none"
+      aria-live="polite"
+    >
+      <AnimatePresence initial={false}>
+        {toasts.map((t) => {
+          const tone = TONE[t.type] ?? TONE.info;
           return (
             <motion.div
-              key={toast.id}
-              initial={{ opacity: 0, y: -15, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.15 } }}
-              className={`pointer-events-auto p-3.5 rounded-xl bg-[#090916]/95 border ${borderColor} shadow-2xl backdrop-blur-2xl flex items-start gap-3`}
-              role="alert"
+              key={t.id}
+              layout
+              variants={toastVariants}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              role={t.type === 'error' ? 'alert' : 'status'}
+              className="pointer-events-auto relative overflow-hidden flex items-start gap-3 py-3 pl-4 pr-2 rounded-xl sheet-surface"
             >
-              <div className="mt-0.5 shrink-0">
-                {toast.type === 'success' && <span className="text-emerald-400">✓</span>}
-                {toast.type === 'error' && <span className="text-red-400">✕</span>}
-                {toast.type === 'warning' && <span className="text-amber-400">⚠</span>}
-                {toast.type === 'info' && <span className="text-cyan-400">✦</span>}
-              </div>
-
+              <span className={`absolute left-0 inset-y-0 w-[3px] ${tone.accent}`} aria-hidden />
+              <Icon name={tone.icon} className={`mt-0.5 shrink-0 ${tone.text}`} />
               <div className="flex-1 min-w-0">
-                <h4 className="text-xs font-mono font-medium text-white tracking-wide">
-                  {toast.title}
-                </h4>
-                {toast.message && (
-                  <p className="text-[11px] text-slate-400 mt-0.5 leading-relaxed font-sans font-normal">
-                    {toast.message}
-                  </p>
-                )}
+                <p className="text-sm font-medium text-white leading-snug">{t.title}</p>
+                {t.message && <p className="text-xs text-slate-400 mt-0.5 leading-relaxed">{t.message}</p>}
               </div>
-
-              <button
-                onClick={() => removeToast(toast.id)}
-                className="text-slate-500 hover:text-white text-xs px-1"
-                aria-label="Dismiss notification"
-              >
-                ✕
+              <button className="btn-icon !w-7 !h-7" onClick={() => removeToast(t.id)} aria-label="Dismiss notification">
+                <Icon name="close" size={14} />
               </button>
             </motion.div>
           );

@@ -76,3 +76,9 @@ export function generateEllipsePoints(
   }
   return points;
 }
+
+/** Visual radius per orbit slot. Shared by the planet mesh and the camera framing logic. */
+export const PLANET_SIZES = [1.1, 0.95, 1.15, 0.85, 1.3];
+export function getPlanetRadius(orbitIndex: number): number {
+  return PLANET_SIZES[((orbitIndex % PLANET_SIZES.length) + PLANET_SIZES.length) % PLANET_SIZES.length] ?? 1;
+}

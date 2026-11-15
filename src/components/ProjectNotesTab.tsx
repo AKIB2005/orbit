@@ -34,13 +34,13 @@ export const ProjectNotesTab = memo(function ProjectNotesTab({ projectId }: Proj
             Planetary Logbook & Architecture Notes
           </h3>
           <p className="text-xs text-slate-400 mt-0.5">
-            Rich markdown documentation and engineering scratchpad for this celestial system.
+            Free-form notes for this project. Saved as you type.
           </p>
         </div>
 
         {savedBadge && (
-          <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 animate-pulse">
-            ✓ Auto-saved
+          <span className="text-[11px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+            Saved
           </span>
         )}
       </div>
@@ -51,10 +51,10 @@ export const ProjectNotesTab = memo(function ProjectNotesTab({ projectId }: Proj
           onChange={(e) => handleChange(e.target.value)}
           placeholder={`# ${project.name} Architectural Notes\n\n- Key system constraints...\n- Technical dependencies...\n- Launch checklist...`}
           rows={14}
-          className="w-full bg-transparent text-sm text-slate-200 font-mono placeholder:text-slate-600 focus:outline-none resize-none leading-relaxed"
+          className="w-full bg-transparent text-sm text-slate-200 placeholder:text-slate-600 focus:outline-none resize-none leading-relaxed"
         />
 
-        <div className="pt-3 border-t border-white/[0.06] flex items-center justify-between text-[11px] font-mono text-slate-400">
+        <div className="pt-3 border-t border-white/[0.06] flex items-center justify-between text-[11px] text-slate-400">
           <span>{notes.length} characters</span>
           <span>IndexedDB Encrypted Offline Storage</span>
         </div>

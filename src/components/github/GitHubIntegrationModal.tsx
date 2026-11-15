@@ -1,5 +1,6 @@
 import { useState, useEffect, memo } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { Modal } from '../ui/Modal';
+import { Icon } from '../ui/Icon';
 import { useOrbitStore } from '../../store/useOrbitStore';
 import {
   isGitHubConnected,
@@ -30,16 +31,6 @@ export const GitHubIntegrationModal = memo(function GitHubIntegrationModal() {
   const [insights, setInsights] = useState<GitHubRepoInsights | null>(null);
   const [loading, setLoading] = useState(false);
   const [syncingIssues, setSyncingIssues] = useState(false);
-
-  // Keyboard Escape listener
-  useEffect(() => {
-    if (!isOpen) return;
-    const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setOpen(false);
-    };
-    window.addEventListener('keydown', handleEsc);
-    return () => window.removeEventListener('keydown', handleEsc);
-  }, [isOpen, setOpen]);
 
   // Handle OAuth code if redirected with ?code=
   useEffect(() => {
@@ -161,49 +152,24 @@ export const GitHubIntegrationModal = memo(function GitHubIntegrationModal() {
     }
   };
 
-  if (!isOpen) return null;
-
   return (
-    <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-        {/* Backdrop */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          onClick={() => setOpen(false)}
-          className="fixed inset-0 bg-black/60 backdrop-blur-md"
-        />
-
-        {/* Modal Window */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95, y: 15 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.95, y: 15 }}
-          className="relative w-full max-w-xl p-6 sm:p-8 rounded-3xl bg-[#080816]/95 border border-white/[0.1] shadow-2xl backdrop-blur-2xl z-10 max-h-[90vh] overflow-y-auto"
-          role="dialog"
-          aria-label="GitHub Repository Integration"
-        >
+    <Modal open={isOpen} onClose={() => setOpen(false)} label="GitHub repository integration" width="max-w-xl">
+        <div className="p-6 sm:p-8">
           {/* Header */}
           <div className="flex items-center justify-between pb-4 border-b border-white/[0.06] mb-6">
             <div className="flex items-center gap-2.5">
-              <div className="w-2.5 h-2.5 rounded-full bg-cyan-400 shadow-[0_0_8px_#22d3ee]" />
-              <h3 className="font-display font-medium text-base text-white tracking-wide">
-                GitHub Repository Enclave
+              <h3 className="font-display font-medium text-base text-white ">
+                GitHub
               </h3>
             </div>
-            <button
-              onClick={() => setOpen(false)}
-              className="text-slate-400 hover:text-white text-sm"
-              aria-label="Close dialog"
-            >
-              ✕
-            </button>
+            <button onClick={() => setOpen(false)} className="btn-icon -mr-2" aria-label="Close dialog">
+                <Icon name="close" />
+              </button>
           </div>
 
           {/* Security Notice */}
-          <div className="mb-6 p-3 rounded-xl bg-white/[0.02] border border-white/[0.06] flex items-center justify-between text-xs font-mono">
-            <span className="text-slate-400">Security Model:</span>
+          <div className="mb-6 p-3 rounded-xl bg-white/[0.02] border border-white/[0.06] flex items-center justify-between text-xs">
+            <span className="text-slate-400">Access:</span>
             <span className="text-emerald-400 flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_#34d399]" />
               Zero-Trust // 100% Read-Only Server Enclave
@@ -232,7 +198,7 @@ export const GitHubIntegrationModal = memo(function GitHubIntegrationModal() {
               <button
                 onClick={handleConnectOAuth}
                 disabled={loading}
-                className="px-6 py-3 rounded-xl bg-white text-[#05050d] hover:bg-slate-100 font-display font-medium text-xs tracking-wider uppercase transition-all shadow-sm cursor-pointer"
+                className="px-6 py-3 rounded-xl bg-white text-[#05050d] hover:bg-slate-100 font-display font-medium text-xs transition-all shadow-sm cursor-pointer"
               >
                 {loading ? 'Connecting...' : 'Authorize GitHub Enclave'}
               </button>
@@ -243,7 +209,7 @@ export const GitHubIntegrationModal = memo(function GitHubIntegrationModal() {
               {/* Connected User Bar */}
               <div className="flex items-center justify-between p-3.5 rounded-2xl bg-white/[0.02] border border-white/[0.06]">
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center font-mono text-xs text-white">
+                  <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-xs text-white">
                     {user?.avatarUrl ? (
                       <img src={user.avatarUrl} alt="Avatar" className="w-full h-full rounded-full object-cover" />
                     ) : (
@@ -251,14 +217,14 @@ export const GitHubIntegrationModal = memo(function GitHubIntegrationModal() {
                     )}
                   </div>
                   <div>
-                    <span className="text-xs font-mono text-slate-300 font-medium">@{user?.login}</span>
-                    <span className="text-[10px] font-mono text-slate-500 block">Authenticated Enclave</span>
+                    <span className="text-xs text-slate-300 font-medium">@{user?.login}</span>
+                    <span className="text-[11px] text-slate-500 block">Authenticated Enclave</span>
                   </div>
                 </div>
 
                 <button
                   onClick={handleDisconnect}
-                  className="text-xs font-mono text-slate-500 hover:text-red-400 transition-colors"
+                  className="text-xs text-slate-500 hover:text-red-400 transition-colors"
                 >
                   Disconnect
                 </button>
@@ -266,19 +232,19 @@ export const GitHubIntegrationModal = memo(function GitHubIntegrationModal() {
 
               {/* Repo Selector */}
               <div>
-                <label className="text-[11px] font-mono text-slate-400 uppercase tracking-wider block mb-1.5">
+                <label className="text-[11px] text-slate-400 block mb-1.5">
                   Select Repository to Link with {project?.name || 'Active Planet'}
                 </label>
                 <div className="flex gap-2">
                   <select
                     value={selectedRepo}
                     onChange={(e) => handleSelectRepo(e.target.value)}
-                    className="flex-1 bg-black/40 border border-white/[0.08] rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-white/30 font-mono"
+                    className="flex-1 bg-black/40 border border-white/[0.08] rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-white/30"
                   >
                     <option value="">-- Choose a repository --</option>
                     {repos.map((r) => (
                       <option key={r.id} value={r.fullName} className="bg-[#090916]">
-                        {r.fullName} ({r.language}) {r.isPrivate ? '🔒' : '🌐'}
+                        {r.fullName} ({r.language}) {r.isPrivate ? '(private)' : ''}
                       </option>
                     ))}
                   </select>
@@ -286,7 +252,7 @@ export const GitHubIntegrationModal = memo(function GitHubIntegrationModal() {
                   <button
                     onClick={handleBindToProject}
                     disabled={!selectedRepo || project?.github?.repo === selectedRepo.split('/')[1]}
-                    className="px-4 py-2 rounded-xl bg-white text-[#05050d] hover:bg-slate-100 disabled:opacity-40 text-xs font-display font-medium tracking-wider uppercase transition-all shadow-sm cursor-pointer whitespace-nowrap"
+                    className="px-4 py-2 rounded-xl bg-white text-[#05050d] hover:bg-slate-100 disabled:opacity-40 text-xs font-display font-medium transition-all shadow-sm cursor-pointer whitespace-nowrap"
                   >
                     {project?.github?.repo === selectedRepo.split('/')[1] ? 'Linked' : 'Link Planet'}
                   </button>
@@ -298,58 +264,58 @@ export const GitHubIntegrationModal = memo(function GitHubIntegrationModal() {
                 <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/[0.06] space-y-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h4 className="text-xs font-mono font-medium text-white">{insights.fullName}</h4>
+                      <h4 className="text-xs font-medium text-white">{insights.fullName}</h4>
                       <p className="text-[11px] text-slate-400 mt-0.5 line-clamp-1">{insights.description}</p>
                     </div>
-                    <span className="text-xs font-mono text-amber-300 flex items-center gap-1">
-                      ★ {insights.stars}
+                    <span className="text-xs text-amber-300 flex items-center gap-1">
+                      {insights.stars} stars
                     </span>
                   </div>
 
                   {/* Telemetry Metrics */}
-                  <div className="grid grid-cols-3 gap-2 text-center text-xs font-mono py-2 border-y border-white/[0.04]">
+                  <div className="grid grid-cols-3 gap-2 text-center text-xs py-2 border-y border-white/[0.04]">
                     <div>
-                      <span className="text-[10px] text-slate-500 uppercase block">Open Issues</span>
+                      <span className="text-[11px] text-slate-500 block">Open Issues</span>
                       <span className="text-white font-medium">{insights.openIssues}</span>
                     </div>
                     <div>
-                      <span className="text-[10px] text-slate-500 uppercase block">Pull Requests</span>
+                      <span className="text-[11px] text-slate-500 block">Pull Requests</span>
                       <span className="text-cyan-300 font-medium">{insights.openPulls}</span>
                     </div>
                     <div>
-                      <span className="text-[10px] text-slate-500 uppercase block">Branch</span>
+                      <span className="text-[11px] text-slate-500 block">Branch</span>
                       <span className="text-slate-300 font-medium">{insights.defaultBranch}</span>
                     </div>
                   </div>
 
                   {/* Sync Issues Action */}
                   <div className="flex items-center justify-between pt-1">
-                    <span className="text-xs font-mono text-slate-400">
+                    <span className="text-xs text-slate-400">
                       Convert issues into satellite tasks:
                     </span>
                     <button
                       onClick={handleSyncIssues}
                       disabled={syncingIssues || insights.recentIssues.length === 0}
-                      className="px-3.5 py-1.5 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-white text-xs font-mono transition-all flex items-center gap-1.5 cursor-pointer"
+                      className="px-3.5 py-1.5 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-white text-xs transition-all flex items-center gap-1.5 cursor-pointer"
                     >
                       <span>{syncingIssues ? 'Deploying...' : 'Deploy Issues to Orbit'}</span>
-                      <span>🛰</span>
+                      <span aria-hidden="true">·</span>
                     </button>
                   </div>
 
                   {/* Recent Commits Stream */}
                   <div>
-                    <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest block mb-2">
+                    <span className="text-[11px] text-slate-500 block mb-2">
                       Recent Commits
                     </span>
                     <div className="space-y-1.5">
                       {insights.recentCommits.map((c) => (
                         <div
                           key={c.sha}
-                          className="flex items-center justify-between text-[11px] font-mono p-2 rounded-lg bg-black/30 border border-white/[0.03]"
+                          className="flex items-center justify-between text-[11px] p-2 rounded-lg bg-black/30 border border-white/[0.03]"
                         >
                           <span className="text-slate-300 truncate max-w-[280px]">{c.message}</span>
-                          <span className="text-slate-500 text-[10px] shrink-0 font-bold">{c.sha}</span>
+                          <span className="text-slate-500 text-[11px] shrink-0 font-bold">{c.sha}</span>
                         </div>
                       ))}
                     </div>
@@ -358,8 +324,7 @@ export const GitHubIntegrationModal = memo(function GitHubIntegrationModal() {
               )}
             </div>
           )}
-        </motion.div>
-      </div>
-    </AnimatePresence>
+        </div>
+    </Modal>
   );
 });

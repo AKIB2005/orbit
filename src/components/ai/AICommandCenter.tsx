@@ -1,9 +1,11 @@
 import { useState, useRef, useEffect, memo } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
 import { useOrbitStore } from '../../store/useOrbitStore';
 import { sendAICommand } from '../../ai/aiClient';
 import type { AIAction } from '../../ai/actionSchemas';
 import { AIActionCard } from './AIActionCard';
+import { RichText } from './RichText';
+import { Modal } from '../ui/Modal';
+import { Icon } from '../ui/Icon';
 import { createId } from '../../utils/id';
 import { getOrbitalParameters, calculateOrbitalPosition } from '../../utils/orbitalKinematics';
 
@@ -19,8 +21,8 @@ interface ChatMessage {
 const QUICK_PROMPTS = [
   'What should I work on today?',
   'Prioritize my pending tasks',
-  'Find system bottlenecks',
-  'Deploy high-priority task for Mobile',
+  'Find bottlenecks',
+  'Add a high-priority task to Mobile',
 ];
 
 export const AICommandCenter = memo(function AICommandCenter() {
@@ -31,7 +33,7 @@ export const AICommandCenter = memo(function AICommandCenter() {
     {
       id: 'init-1',
       sender: 'assistant',
-      text: `### 🪐 ORBIT AI Command Center Online\n\nI am your spatial mission navigator. I analyze real-time orbital kinematics, project health, and task dependencies across your entire universe.\n\nAsk me anything or select a flight plan below:`,
+      text: `### Ask ORBIT\n\nI can plan your day, re-prioritise tasks, spot bottlenecks, and add tasks or planets for you. I’ll always show a change before applying it.\n\nType a request or pick one below.`,
       provider: 'local_engine',
       timestamp: Date.now(),
     },
@@ -61,10 +63,6 @@ export const AICommandCenter = memo(function AICommandCenter() {
   useEffect(() => {
     const handleToggle = () => setIsOpen((prev) => !prev);
     const handleKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isOpen) {
-        setIsOpen(false);
-        return;
-      }
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
         setIsOpen((prev) => !prev);
@@ -76,7 +74,7 @@ export const AICommandCenter = memo(function AICommandCenter() {
       document.removeEventListener('orbit:toggle-ai', handleToggle);
       window.removeEventListener('keydown', handleKey);
     };
-  }, [isOpen]);
+  }, []);
 
   const handleSend = async (userPrompt?: string) => {
     const query = (userPrompt || input).trim();
@@ -120,7 +118,7 @@ export const AICommandCenter = memo(function AICommandCenter() {
         {
           id: createId(),
           sender: 'assistant',
-          text: 'Encountered unexpected disruption in cognitive telemetry. Please try again.',
+          text: 'Something went wrong while processing that. Check your connection and try again.',
           provider: 'local_engine',
           timestamp: Date.now(),
         },
@@ -193,185 +191,129 @@ export const AICommandCenter = memo(function AICommandCenter() {
     );
   };
 
+  const lastProvider = messages[messages.length - 1]?.provider;
+
   return (
-    <>
-      {/* Floating Launcher Trigger Pill (Bottom Right) */}
-      <div className="fixed bottom-20 right-4 sm:bottom-6 sm:right-6 z-40 pointer-events-auto">
-        <button
-          onClick={() => setIsOpen(!isOpen)}
-          className="group relative flex items-center gap-2.5 px-3.5 py-2.5 rounded-2xl bg-surface/90 border border-white/[0.1] text-white font-display text-xs font-medium tracking-wider uppercase transition-all duration-300 hover:border-white/20 active:scale-95 shadow-[0_12px_32px_rgba(0,0,0,0.6)] backdrop-blur-xl focus:outline-none cursor-pointer"
-          aria-label="Open AI Command Center"
-        >
-          {/* Animated beacon core */}
-          <div className="relative w-3 h-3 flex items-center justify-center">
-            <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 shadow-[0_0_6px_#22d3ee]" />
+    <Modal
+      open={isOpen}
+      onClose={() => setIsOpen(false)}
+      label="Ask ORBIT AI"
+      width="max-w-xl"
+      scroll={false}
+      placement="top"
+      className="flex flex-col h-[min(40rem,86dvh)]"
+    >
+      {/* Header */}
+      <div className="px-5 py-3.5 border-b border-white/[0.07] flex items-center justify-between shrink-0">
+        <div className="flex items-center gap-3">
+          <span className="w-8 h-8 rounded-lg bg-white/[0.06] border border-white/[0.08] flex items-center justify-center text-ion">
+            <Icon name="sparkle" size={16} />
+          </span>
+          <div>
+            <h2 className="font-display text-[15px] font-medium text-white leading-tight">Ask ORBIT</h2>
+            <p className="text-xs text-slate-400 leading-tight mt-0.5">
+              {lastProvider === 'gemini' ? 'Powered by Gemini' : 'Running locally on your device'}
+            </p>
           </div>
-
-          <span className="font-medium text-slate-200">AI COMMAND</span>
-
-          <kbd className="hidden sm:inline-block px-1.5 py-0.5 rounded bg-black/40 border border-white/20 text-[10px] font-mono text-slate-300">
-            ⌘K
-          </kbd>
-        </button>
+        </div>
+        <div className="flex items-center -mr-1.5">
+          <button
+            className="btn-icon"
+            onClick={() =>
+              setMessages([
+                {
+                  id: 'reset',
+                  sender: 'assistant',
+                  text: 'Conversation cleared. What would you like to do?',
+                  provider: 'local_engine',
+                  timestamp: Date.now(),
+                },
+              ])
+            }
+            aria-label="Clear conversation"
+            title="Clear conversation"
+          >
+            <Icon name="trash" size={15} />
+          </button>
+          <button className="btn-icon" onClick={() => setIsOpen(false)} aria-label="Close" title="Close (Esc)">
+            <Icon name="close" />
+          </button>
+        </div>
       </div>
 
-      {/* Floating Conversational Command Center Modal */}
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            transition={{ type: 'spring', damping: 25, stiffness: 320 }}
-            className="fixed bottom-4 sm:bottom-20 right-2 sm:right-6 z-50 w-[460px] max-w-[95vw] h-[580px] max-h-[85vh] flex flex-col rounded-2xl sm:rounded-3xl bg-[#090915]/95 border border-white/[0.1] shadow-[0_25px_70px_rgba(0,0,0,0.85)] overflow-hidden pointer-events-auto backdrop-blur-2xl"
-            role="dialog"
-            aria-label="ORBIT AI Command Center"
-          >
-            {/* Header */}
-            <div className="p-4 border-b border-white/[0.08] bg-black/40 flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
-                <div className="w-2.5 h-2.5 rounded-full bg-cyan-400 shadow-[0_0_10px_#22d3ee] animate-pulse" />
-                <div>
-                  <h3 className="font-display font-bold text-sm text-white flex items-center gap-2">
-                    <span>ORBIT AI NAVIGATOR</span>
-                  </h3>
-                  <span className="text-[10px] font-mono text-slate-400">
-                    {messages[messages.length - 1]?.provider === 'gemini'
-                      ? '✦ Gemini Spatial Engine Active'
-                      : '✦ Local Cognitive Engine (Offline Vault)'}
-                  </span>
-                </div>
-              </div>
+      {/* Conversation */}
+      <div ref={scrollRef} className="flex-1 overflow-y-auto overscroll-contain p-5 space-y-5" aria-live="polite">
+        {messages.map((msg) => (
+          <div key={msg.id} className={`flex flex-col ${msg.sender === 'user' ? 'items-end' : 'items-start'}`}>
+            <div
+              className={`max-w-[92%] rounded-2xl px-4 py-3 text-[13px] leading-relaxed ${
+                msg.sender === 'user'
+                  ? 'bg-starlight text-[#0a0a12] rounded-br-md'
+                  : 'bg-white/[0.04] border border-white/[0.07] text-slate-200 rounded-bl-md'
+              }`}
+            >
+              {msg.sender === 'user' ? <p className="whitespace-pre-wrap">{msg.text}</p> : <RichText text={msg.text} />}
 
-              <div className="flex items-center gap-1.5">
-                <button
-                  onClick={() =>
-                    setMessages([
-                      {
-                        id: 'reset',
-                        sender: 'assistant',
-                        text: 'Command telemetry reset. Standing by for instructions, Commander.',
-                        provider: 'local_engine',
-                        timestamp: Date.now(),
-                      },
-                    ])
-                  }
-                  className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-white hover:bg-white/[0.08] text-xs font-mono transition-colors"
-                  title="Clear conversation"
-                >
-                  ↺
-                </button>
-                <button
-                  onClick={() => setIsOpen(false)}
-                  className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-white hover:bg-white/[0.08] text-xs font-mono transition-colors"
-                  title="Close Assistant (Esc)"
-                >
-                  ✕
-                </button>
-              </div>
-            </div>
-
-            {/* Conversational Stream */}
-            <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-4">
-              {messages.map((msg) => (
-                <div
-                  key={msg.id}
-                  className={`flex flex-col ${
-                    msg.sender === 'user' ? 'items-end' : 'items-start'
-                  }`}
-                >
-                  <div
-                    className={`max-w-[90%] rounded-2xl p-3.5 text-xs leading-relaxed ${
-                      msg.sender === 'user'
-                        ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-[0_4px_20px_rgba(139,92,246,0.3)]'
-                        : 'bg-white/[0.04] border border-white/[0.08] text-slate-200'
-                    }`}
-                  >
-                    {/* Render plain / formatted text */}
-                    <div className="whitespace-pre-wrap font-sans space-y-2">
-                      {msg.text}
-                    </div>
-
-                    {/* Render Structured Action Cards if present */}
-                    {msg.actions && msg.actions.length > 0 && (
-                      <div className="mt-3 pt-2 border-t border-white/[0.08]">
-                        <span className="text-[10px] font-mono text-cyan-300 uppercase tracking-wider block mb-1">
-                          ✦ PROPOSED WORKSPACE ACTIONS ({msg.actions.length}):
-                        </span>
-                        {msg.actions.map((act) => (
-                          <AIActionCard
-                            key={act.id}
-                            action={act}
-                            onConfirm={handleConfirmAction}
-                            onDismiss={handleDismissAction}
-                          />
-                        ))}
-                      </div>
-                    )}
-                  </div>
-
-                  <span className="text-[9px] font-mono text-slate-500 mt-1 px-1">
-                    {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  </span>
-                </div>
-              ))}
-
-              {isLoading && (
-                <div className="flex items-center gap-2 p-3.5 rounded-2xl bg-white/[0.03] border border-white/[0.06] text-xs text-slate-400 w-fit">
-                  <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
-                  <span className="font-mono text-[11px]">Computing celestial trajectory...</span>
+              {msg.actions && msg.actions.length > 0 && (
+                <div className="mt-3 pt-3 border-t border-white/[0.08]">
+                  <p className="text-xs font-medium text-slate-300 mb-1">
+                    {msg.actions.length === 1 ? 'Suggested change' : `${msg.actions.length} suggested changes`}
+                  </p>
+                  {msg.actions.map((act) => (
+                    <AIActionCard key={act.id} action={act} onConfirm={handleConfirmAction} onDismiss={handleDismissAction} />
+                  ))}
                 </div>
               )}
             </div>
+            <span className="text-[11px] text-slate-500 mt-1 px-1 tabular-nums">
+              {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            </span>
+          </div>
+        ))}
 
-            {/* Quick Prompt Recommendation Pills */}
-            <div className="px-4 py-2 border-t border-white/[0.06] bg-black/20 flex items-center gap-2 overflow-x-auto">
-              <span className="text-[9px] font-mono uppercase text-slate-500 shrink-0">
-                PROMPTS:
-              </span>
-              {QUICK_PROMPTS.map((p, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => handleSend(p)}
-                  disabled={isLoading}
-                  className="px-2.5 py-1 rounded-lg bg-white/[0.03] hover:bg-white/[0.08] border border-white/[0.06] text-[10px] font-mono text-slate-300 hover:text-white transition-all whitespace-nowrap shrink-0 disabled:opacity-40"
-                >
-                  {p}
-                </button>
-              ))}
-            </div>
-
-            {/* Input Bar */}
-            <div className="p-3 border-t border-white/[0.08] bg-black/40">
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  handleSend();
-                }}
-                className="flex items-center gap-2"
-              >
-                <input
-                  ref={inputRef}
-                  type="text"
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  placeholder="Ask ORBIT AI or issue flight commands..."
-                  disabled={isLoading}
-                  className="flex-1 bg-black/50 border border-white/[0.08] rounded-xl px-3.5 py-2 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-violet-500/60 disabled:opacity-50"
-                />
-                <button
-                  type="submit"
-                  disabled={!input.trim() || isLoading}
-                  className="px-4 py-2 bg-gradient-to-r from-violet-600 to-cyan-500 hover:from-violet-500 hover:to-cyan-400 disabled:opacity-40 text-white rounded-xl text-xs font-mono font-semibold transition-all shadow-[0_0_12px_rgba(139,92,246,0.4)]"
-                  aria-label="Send AI Query"
-                >
-                  Send
-                </button>
-              </form>
-            </div>
-          </motion.div>
+        {isLoading && (
+          <div className="flex items-center gap-1.5 px-4 py-3 rounded-2xl rounded-bl-md bg-white/[0.04] border border-white/[0.07] w-fit" role="status" aria-label="ORBIT is thinking">
+            {[0, 1, 2].map((i) => (
+              <span key={i} className="w-1.5 h-1.5 rounded-full bg-slate-400 animate-bounce" style={{ animationDelay: `${i * 120}ms` }} />
+            ))}
+          </div>
         )}
-      </AnimatePresence>
-    </>
+      </div>
+
+      {/* Suggestions */}
+      <div className="px-4 py-2.5 border-t border-white/[0.06] flex items-center gap-2 overflow-x-auto shrink-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        {QUICK_PROMPTS.map((p) => (
+          <button key={p} onClick={() => handleSend(p)} disabled={isLoading} className="chip shrink-0 !px-3 !py-1.5 hover:bg-white/[0.09] hover:text-white transition-colors disabled:opacity-40 cursor-pointer">
+            {p}
+          </button>
+        ))}
+      </div>
+
+      {/* Input */}
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          handleSend();
+        }}
+        className="p-3 border-t border-white/[0.07] flex items-center gap-2 shrink-0"
+      >
+        <label htmlFor="ai-input" className="sr-only">Message ORBIT</label>
+        <input
+          id="ai-input"
+          data-autofocus
+          ref={inputRef}
+          type="text"
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          placeholder="Ask anything, or describe a change…"
+          disabled={isLoading}
+          autoComplete="off"
+          className="field flex-1"
+        />
+        <button type="submit" disabled={!input.trim() || isLoading} className="btn btn-primary !h-10" aria-label="Send">
+          <Icon name="arrowRight" size={16} strokeWidth={2.25} />
+        </button>
+      </form>
+    </Modal>
   );
 });

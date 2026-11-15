@@ -98,7 +98,7 @@ export const ProjectTimelineTab = memo(function ProjectTimelineTab({ projectId }
     <div className="space-y-6">
       {/* Filter Chips */}
       <div className="flex items-center justify-between">
-        <div className="flex rounded-xl bg-black/40 p-1 border border-white/[0.06] text-xs font-mono">
+        <div className="flex rounded-xl bg-black/40 p-1 border border-white/[0.06] text-xs">
           <button
             onClick={() => setFilter('all')}
             className={`px-3 py-1.5 rounded-lg transition-all ${
@@ -125,7 +125,7 @@ export const ProjectTimelineTab = memo(function ProjectTimelineTab({ projectId }
           </button>
         </div>
 
-        <span className="text-[11px] font-mono text-slate-500 hidden sm:inline">
+        <span className="text-[11px] text-slate-500 hidden sm:inline">
           Chronological Vector
         </span>
       </div>
@@ -167,7 +167,7 @@ export const ProjectTimelineTab = memo(function ProjectTimelineTab({ projectId }
                       onClick={() =>
                         isMilestone ? toggleMilestone(item.id) : toggleTaskComplete(item.id)
                       }
-                      className="mt-0.5 w-4 h-4 rounded border border-white/20 flex items-center justify-center text-[10px] text-emerald-400 hover:border-emerald-400 transition-colors shrink-0 cursor-pointer"
+                      className="mt-0.5 w-4 h-4 rounded border border-white/20 flex items-center justify-center text-[11px] text-emerald-400 hover:border-emerald-400 transition-colors shrink-0 cursor-pointer"
                       aria-label="Toggle completion"
                     >
                       {item.completed && '✓'}
@@ -176,17 +176,17 @@ export const ProjectTimelineTab = memo(function ProjectTimelineTab({ projectId }
                     <div className="min-w-0">
                       <div className="flex items-center gap-2 mb-0.5">
                         <span
-                          className={`text-[9px] font-mono px-1.5 py-0.2 rounded-full uppercase ${
+                          className={`text-[11px] px-1.5 py-0.2 rounded-full  ${
                             isMilestone
                               ? 'bg-violet-500/20 text-violet-300 border border-violet-500/30'
                               : 'bg-white/[0.04] text-slate-400'
                           }`}
                         >
-                          {isMilestone ? '◆ Milestone' : '🛰 Satellite'}
+                          {isMilestone ? 'Milestone' : 'Task'}
                         </span>
                         {!isMilestone && (
                           <span
-                            className="text-[9px] font-mono uppercase font-bold"
+                            className="text-[11px] font-bold"
                             style={{ color: PRIORITY_COLORS[(item as any).priority as keyof typeof PRIORITY_COLORS] }}
                           >
                             {(item as any).priority}
@@ -208,7 +208,7 @@ export const ProjectTimelineTab = memo(function ProjectTimelineTab({ projectId }
                   <div className="text-right shrink-0">
                     {item.date ? (
                       <span
-                        className={`text-[11px] font-mono block ${
+                        className={`text-[11px] block ${
                           isOverdue ? 'text-red-400 font-semibold' : 'text-slate-400'
                         }`}
                       >
@@ -218,13 +218,13 @@ export const ProjectTimelineTab = memo(function ProjectTimelineTab({ projectId }
                         })}
                       </span>
                     ) : (
-                      <span className="text-[10px] font-mono text-slate-600 block">
+                      <span className="text-[11px] text-slate-600 block">
                         Undated Orbit
                       </span>
                     )}
 
                     {isOverdue && (
-                      <span className="text-[9px] font-mono text-red-400 uppercase tracking-wider block">
+                      <span className="text-[11px] text-red-400 block">
                         OVERDUE
                       </span>
                     )}

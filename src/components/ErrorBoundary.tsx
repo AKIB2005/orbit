@@ -4,46 +4,45 @@ import type { ReactNode, ErrorInfo } from 'react';
 interface Props {
   children: ReactNode;
 }
-
 interface State {
   hasError: boolean;
   error: Error | null;
 }
 
 export class ErrorBoundary extends Component<Props, State> {
-  constructor(props: Props) {
-    super(props);
-    this.state = { hasError: false, error: null };
-  }
+  state: State = { hasError: false, error: null };
 
   static getDerivedStateFromError(error: Error): State {
     return { hasError: true, error };
   }
 
-  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('ORBIT Error:', error, errorInfo);
+  componentDidCatch(error: Error, info: ErrorInfo) {
+    console.error('ORBIT Error:', error, info);
   }
 
   render() {
-    if (this.state.hasError) {
-      return (
-        <div className="flex items-center justify-center w-full h-full bg-void text-text-primary">
-          <div className="text-center max-w-md p-8">
-            <div className="text-4xl mb-4">🪐</div>
-            <h1 className="text-xl font-bold mb-2">Something went wrong</h1>
-            <p className="text-text-muted text-sm mb-6">
-              {this.state.error?.message || 'An unexpected error occurred'}
-            </p>
-            <button
-              onClick={() => window.location.reload()}
-              className="px-4 py-2 rounded-md bg-accent-violet text-white text-sm font-medium hover:bg-accent-violet/80 transition-colors"
-            >
-              Reload ORBIT
+    if (!this.state.hasError) return this.props.children;
+    return (
+      <div className="flex items-center justify-center w-full min-h-dvh bg-[#030308] text-white p-6">
+        <div className="max-w-sm text-center" role="alert">
+          <svg className="mx-auto mb-5" width="48" height="48" viewBox="0 0 48 48" fill="none" aria-hidden="true">
+            <circle cx="22" cy="26" r="9" fill="rgba(243,238,226,0.85)" />
+            <path d="M33 10l-3 6 5 2" stroke="#fda4af" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
+            <circle cx="36" cy="12" r="2" fill="#fda4af" />
+          </svg>
+          <h1 className="font-display text-xl font-medium mb-2">ORBIT hit a problem</h1>
+          <p className="text-sm text-slate-400 leading-relaxed mb-1">Your projects are stored on this device and weren’t affected.</p>
+          <p className="text-xs text-slate-500 mb-6 break-words">{this.state.error?.message}</p>
+          <div className="flex items-center justify-center gap-2">
+            <button className="btn btn-primary" onClick={() => this.setState({ hasError: false, error: null })}>
+              Try again
+            </button>
+            <button className="btn btn-ghost" onClick={() => window.location.reload()}>
+              Reload
             </button>
           </div>
         </div>
-      );
-    }
-    return this.props.children;
+      </div>
+    );
   }
 }

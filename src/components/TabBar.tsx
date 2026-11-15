@@ -1,6 +1,9 @@
-import { memo, useMemo } from 'react';
+import { memo, useMemo, useRef, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { useOrbitStore } from '../store/useOrbitStore';
 import type { UIState } from '../types';
+
+type TabKey = UIState['panelView'];
 
 export const TabBar = memo(function TabBar() {
   const panelView = useOrbitStore((s) => s.ui.panelView);
@@ -8,18 +11,18 @@ export const TabBar = memo(function TabBar() {
   const selectedProjectId = useOrbitStore((s) => s.ui.selectedProjectId);
   const allTasks = useOrbitStore((s) => s.tasks);
   const allMilestones = useOrbitStore((s) => s.milestones);
+  const refs = useRef<Partial<Record<TabKey, HTMLButtonElement | null>>>({});
 
-  const taskCount = useMemo(() => {
-    if (!selectedProjectId) return 0;
-    return Object.values(allTasks).filter((t) => t.projectId === selectedProjectId).length;
-  }, [allTasks, selectedProjectId]);
+  const taskCount = useMemo(
+    () => (selectedProjectId ? Object.values(allTasks).filter((t) => t.projectId === selectedProjectId).length : 0),
+    [allTasks, selectedProjectId]
+  );
+  const milestoneCount = useMemo(
+    () => (selectedProjectId ? Object.values(allMilestones).filter((m) => m.projectId === selectedProjectId).length : 0),
+    [allMilestones, selectedProjectId]
+  );
 
-  const milestoneCount = useMemo(() => {
-    if (!selectedProjectId) return 0;
-    return Object.values(allMilestones).filter((m) => m.projectId === selectedProjectId).length;
-  }, [allMilestones, selectedProjectId]);
-
-  const tabs: { key: UIState['panelView']; label: string; count?: number }[] = [
+  const tabs: { key: TabKey; label: string; count?: number }[] = [
     { key: 'overview', label: 'Overview' },
     { key: 'tasks', label: 'Tasks', count: taskCount },
     { key: 'insights', label: 'Insights' },
@@ -30,46 +33,60 @@ export const TabBar = memo(function TabBar() {
     { key: 'settings', label: 'Settings' },
   ];
 
-  const handleKeyDown = (e: React.KeyboardEvent, index: number) => {
-    if (e.key === 'ArrowRight') {
-      e.preventDefault();
-      const nextIdx = (index + 1) % tabs.length;
-      openPanel(tabs[nextIdx].key);
-    } else if (e.key === 'ArrowLeft') {
-      e.preventDefault();
-      const prevIdx = (index - 1 + tabs.length) % tabs.length;
-      openPanel(tabs[prevIdx].key);
-    }
+  // Keep the active tab visible when the strip scrolls horizontally
+  useEffect(() => {
+    refs.current[panelView]?.scrollIntoView({ inline: 'nearest', block: 'nearest', behavior: 'smooth' });
+  }, [panelView]);
+
+  const move = (to: number) => {
+    const next = tabs[(to + tabs.length) % tabs.length].key;
+    openPanel(next);
+    // Roving focus: move DOM focus with the selection so repeated arrow presses keep travelling
+    requestAnimationFrame(() => refs.current[next]?.focus());
+  };
+
+  const onKeyDown = (e: React.KeyboardEvent, index: number) => {
+    if (e.key === 'ArrowRight') { e.preventDefault(); move(index + 1); }
+    else if (e.key === 'ArrowLeft') { e.preventDefault(); move(index - 1); }
+    else if (e.key === 'Home') { e.preventDefault(); move(0); }
+    else if (e.key === 'End') { e.preventDefault(); move(tabs.length - 1); }
   };
 
   return (
     <div
-      className="flex border-b border-white/[0.08] bg-black/20 overflow-x-auto px-2"
+      className="flex border-b border-white/[0.07] overflow-x-auto px-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       role="tablist"
-      aria-label="Workspace Sections"
+      aria-label="Workspace sections"
     >
       {tabs.map((tab, idx) => {
-        const isSelected = panelView === tab.key;
+        const selected = panelView === tab.key;
         return (
           <button
             key={tab.key}
+            ref={(el) => {
+              refs.current[tab.key] = el;
+            }}
+            id={`tab-${tab.key}`}
             role="tab"
-            aria-selected={isSelected}
+            aria-selected={selected}
+            aria-controls="workspace-tabpanel"
+            tabIndex={selected ? 0 : -1}
             onClick={() => openPanel(tab.key)}
-            onKeyDown={(e) => handleKeyDown(e, idx)}
-            className={`px-3 py-2.5 text-xs font-mono transition-all flex items-center gap-1.5 whitespace-nowrap shrink-0 border-b-2 ${isSelected
-                ? 'text-cyan-300 border-cyan-400 font-semibold bg-white/[0.03]'
-                : 'text-slate-400 hover:text-white border-transparent hover:bg-white/[0.01]'
-              }`}
+            onKeyDown={(e) => onKeyDown(e, idx)}
+            className={`relative px-3 py-3 text-[13px] flex items-center gap-1.5 whitespace-nowrap shrink-0 transition-colors duration-150 ${
+              selected ? 'text-white font-medium' : 'text-slate-400 hover:text-white'
+            }`}
           >
             <span>{tab.label}</span>
             {tab.count !== undefined && tab.count > 0 && (
-              <span
-                className={`text-[10px] px-1.5 py-0.2 rounded-full ${isSelected ? 'bg-cyan-500/20 text-cyan-300' : 'bg-white/[0.06] text-slate-400'
-                  }`}
-              >
-                {tab.count}
-              </span>
+              <span className="text-[11px] tabular-nums text-slate-500">{tab.count}</span>
+            )}
+            {selected && (
+              <motion.span
+                layoutId="panel-tab-underline"
+                className="absolute inset-x-2 -bottom-px h-[2px] rounded-full bg-starlight"
+                transition={{ type: 'spring', damping: 30, stiffness: 420 }}
+              />
             )}
           </button>
         );

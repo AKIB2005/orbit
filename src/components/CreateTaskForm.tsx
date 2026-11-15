@@ -40,39 +40,38 @@ export const CreateTaskForm = memo(function CreateTaskForm({ projectId }: Create
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          placeholder="Deploy new satellite task..."
+          placeholder="Add a task…"
+          aria-label="New task title"
           maxLength={120}
-          className="flex-1 bg-black/40 border border-white/[0.08] rounded-xl px-3.5 py-2 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-violet-500/60"
+          className="field flex-1"
         />
         <button
           type="button"
           onClick={() => setShowOptions(!showOptions)}
-          className={`px-3 py-2 rounded-xl text-xs font-mono border transition-all ${
-            showOptions
-              ? 'bg-white/10 border-white/20 text-white'
-              : 'border-white/[0.08] text-slate-400 hover:text-white bg-black/30'
-          }`}
+          className={`btn ${showOptions ? 'btn-glass !text-white' : 'btn-ghost'}`}
+          aria-expanded={showOptions}
           title="Toggle priority & due date"
         >
-          ⚙ Options
+          Options
         </button>
         <button
           type="submit"
           disabled={!title.trim()}
-          className="px-4 py-2 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed text-[#05050d] text-xs font-display font-medium tracking-wider uppercase rounded-xl transition-all shadow-[0_1px_2px_rgba(0,0,0,0.4)] active:scale-95 cursor-pointer"
+          className="btn btn-primary"
         >
-          Add Task
+          Add task
         </button>
       </div>
 
       {showOptions && (
         <div className="pt-2 border-t border-white/[0.06] flex flex-wrap items-center gap-3">
           <div className="flex items-center gap-2">
-            <label className="text-[10px] font-mono text-slate-400 uppercase">Priority:</label>
+            <label htmlFor="ct-priority" className="text-xs text-slate-400">Priority</label>
             <select
+              id="ct-priority"
               value={priority}
               onChange={(e) => setPriority(e.target.value as TaskPriority)}
-              className="bg-black/50 border border-white/10 rounded-lg px-2 py-1 text-xs text-white focus:outline-none focus:border-violet-500/60"
+              className="field !w-auto !min-h-9"
             >
               <option value="low" className="bg-[#0a0a18]">Low</option>
               <option value="medium" className="bg-[#0a0a18]">Medium</option>
@@ -82,12 +81,13 @@ export const CreateTaskForm = memo(function CreateTaskForm({ projectId }: Create
           </div>
 
           <div className="flex items-center gap-2">
-            <label className="text-[10px] font-mono text-slate-400 uppercase">Due Date:</label>
+            <label htmlFor="ct-due" className="text-xs text-slate-400">Due date</label>
             <input
+              id="ct-due"
               type="date"
               value={dueDate}
               onChange={(e) => setDueDate(e.target.value)}
-              className="bg-black/50 border border-white/10 rounded-lg px-2 py-1 text-xs text-white focus:outline-none focus:border-violet-500/60"
+              className="field !w-auto !min-h-9"
             />
           </div>
         </div>

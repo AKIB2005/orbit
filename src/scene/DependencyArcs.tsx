@@ -4,6 +4,9 @@ import * as THREE from 'three';
 import { useOrbitStore } from '../store/useOrbitStore';
 import { activePlanetPositions } from '../utils/orbitalKinematics';
 
+const SEGMENTS = 49; // 50 points
+const LIFT = 3.0;
+
 export const DependencyArcs = memo(function DependencyArcs() {
   const links = useOrbitStore((s) => s.links);
   const showLines = useOrbitStore((s) => s.settings.showDependencyLines);
@@ -13,11 +16,7 @@ export const DependencyArcs = memo(function DependencyArcs() {
   return (
     <group>
       {Object.values(links).map((link) => (
-        <DynamicDependencyArc
-          key={link.id}
-          sourceId={link.sourceProjectId}
-          targetId={link.targetProjectId}
-        />
+        <DynamicDependencyArc key={link.id} sourceId={link.sourceProjectId} targetId={link.targetProjectId} />
       ))}
     </group>
   );
@@ -28,79 +27,67 @@ interface DynamicDependencyArcProps {
   targetId: string;
 }
 
-const DynamicDependencyArc = memo(function DynamicDependencyArc({
-  sourceId,
-  targetId,
-}: DynamicDependencyArcProps) {
-  const lineRef = useRef<THREE.Line>(null);
-  const dashOffsetRef = useRef(0);
-  const pointsRef = useRef<THREE.Vector3[]>([]);
+const DynamicDependencyArc = memo(function DynamicDependencyArc({ sourceId, targetId }: DynamicDependencyArcProps) {
+  const dashOffset = useRef(0);
+  const emphasis = useRef(0);
+  const reducedMotion = useOrbitStore((s) => s.settings.reducedMotion);
+  // Arcs touching the selected planet brighten; the rest recede so relationships read at a glance.
+  const related = useOrbitStore((s) => s.ui.selectedProjectId === sourceId || s.ui.selectedProjectId === targetId);
+  const anySelected = useOrbitStore((s) => s.ui.selectedProjectId !== null);
 
-  // Create reusable geometry & dashed material
-  const geometry = useMemo(() => {
-    const geom = new THREE.BufferGeometry();
-    const positions = new Float32Array(50 * 3);
-    geom.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-    return geom;
+  const { geometry, material, line } = useMemo(() => {
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.BufferAttribute(new Float32Array((SEGMENTS + 1) * 3), 3));
+    const m = new THREE.LineDashedMaterial({
+      color: '#a78bfa',
+      transparent: true,
+      opacity: 0.4,
+      dashSize: 0.4,
+      gapSize: 0.28,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
+    const l = new THREE.Line(g, m);
+    l.frustumCulled = false;
+    return { geometry: g, material: m, line: l };
   }, []);
 
-  const material = useMemo(
-    () =>
-      new THREE.LineDashedMaterial({
-        color: '#8b5cf6',
-        transparent: true,
-        opacity: 0.5,
-        dashSize: 0.4,
-        gapSize: 0.25,
-        blending: THREE.AdditiveBlending,
-      }),
-    []
-  );
-
-  const lineObject = useMemo(() => {
-    const l = new THREE.Line(geometry, material);
-    return l;
-  }, [geometry, material]);
-
-  useEffect(() => {
-    return () => {
+  useEffect(
+    () => () => {
       geometry.dispose();
       material.dispose();
-    };
-  }, [geometry, material]);
+    },
+    [geometry, material]
+  );
 
   useFrame((_, delta) => {
-    const sourcePos = activePlanetPositions.get(sourceId);
-    const targetPos = activePlanetPositions.get(targetId);
+    const a = activePlanetPositions.get(sourceId);
+    const b = activePlanetPositions.get(targetId);
+    if (!a || !b) return;
 
-    if (!sourcePos || !targetPos || !lineRef.current) return;
-
-    // Calculate elevated midpoint for cosmic curvature
-    const midX = (sourcePos.x + targetPos.x) / 2;
-    const midY = Math.max(sourcePos.y, targetPos.y) + 3.0;
-    const midZ = (sourcePos.z + targetPos.z) / 2;
-
-    const curve = new THREE.QuadraticBezierCurve3(
-      sourcePos,
-      new THREE.Vector3(midX, midY, midZ),
-      targetPos
-    );
-
-    pointsRef.current = curve.getPoints(49);
-    const posAttr = lineRef.current.geometry.attributes.position as THREE.BufferAttribute;
-
-    for (let i = 0; i < pointsRef.current.length; i++) {
-      const pt = pointsRef.current[i];
-      posAttr.setXYZ(i, pt.x, pt.y, pt.z);
+    // Quadratic Bézier evaluated in place — no curve/vector allocation per frame.
+    const mx = (a.x + b.x) / 2;
+    const my = Math.max(a.y, b.y) + LIFT;
+    const mz = (a.z + b.z) / 2;
+    const pos = geometry.attributes.position as THREE.BufferAttribute;
+    for (let i = 0; i <= SEGMENTS; i++) {
+      const t = i / SEGMENTS;
+      const u = 1 - t;
+      const w0 = u * u;
+      const w1 = 2 * u * t;
+      const w2 = t * t;
+      pos.setXYZ(i, w0 * a.x + w1 * mx + w2 * b.x, w0 * a.y + w1 * my + w2 * b.y, w0 * a.z + w1 * mz + w2 * b.z);
     }
-    posAttr.needsUpdate = true;
-    lineRef.current.computeLineDistances();
+    pos.needsUpdate = true;
+    line.computeLineDistances();
 
-    // Pulse moving energy pulses along the dependency stream
-    dashOffsetRef.current -= delta * 2.2;
-    (material as unknown as { dashOffset: number }).dashOffset = dashOffsetRef.current;
-    material.opacity = 0.4 + Math.sin(dashOffsetRef.current * 3) * 0.2;
+    const target = anySelected ? (related ? 1 : -1) : 0;
+    emphasis.current = THREE.MathUtils.damp(emphasis.current, target, 6, Math.min(delta, 0.05));
+    if (!reducedMotion) dashOffset.current -= delta * 1.6;
+    // three's typings omit dashOffset on LineDashedMaterial, though the shader reads it
+    (material as unknown as { dashOffset: number }).dashOffset = dashOffset.current;
+    material.opacity = 0.38 + emphasis.current * 0.3;
   });
 
-  return <primitive ref={lineRef} object={lineObject} />;
+  return <primitive object={line} />;
 });

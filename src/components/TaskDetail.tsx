@@ -51,7 +51,7 @@ export const TaskDetail = memo(function TaskDetail({ taskId }: TaskDetailProps) 
     <div className="px-4 pb-4 pt-2 border-t border-white/[0.06] bg-black/30 space-y-3.5">
       {/* Title Edit */}
       <div>
-        <label className="text-[10px] font-mono text-slate-400 block mb-1">
+        <label className="text-[11px] text-slate-400 block mb-1">
           Task Title
         </label>
         <input
@@ -60,13 +60,13 @@ export const TaskDetail = memo(function TaskDetail({ taskId }: TaskDetailProps) 
           onChange={(e) => setTitle(e.target.value)}
           onBlur={handleTitleBlur}
           maxLength={120}
-          className="w-full bg-black/40 border border-white/[0.08] rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-violet-500/60"
+          className="field"
         />
       </div>
 
       {/* Description Edit */}
       <div>
-        <label className="text-[10px] font-mono text-slate-400 block mb-1">
+        <label className="text-[11px] text-slate-400 block mb-1">
           Payload Specification & Notes
         </label>
         <textarea
@@ -76,14 +76,14 @@ export const TaskDetail = memo(function TaskDetail({ taskId }: TaskDetailProps) 
           rows={3}
           maxLength={2000}
           placeholder="Add execution details, technical requirements, acceptance criteria..."
-          className="w-full bg-black/40 border border-white/[0.08] rounded-lg px-3 py-1.5 text-xs text-slate-200 placeholder:text-slate-600 focus:outline-none focus:border-violet-500/60 resize-none leading-relaxed"
+          className="field resize-none"
         />
       </div>
 
       {/* 2-column Grid: Priority & Due Date */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
-          <label className="text-[10px] font-mono text-slate-400 block mb-1">
+          <label className="text-[11px] text-slate-400 block mb-1">
             Priority Kinematics
           </label>
           <select
@@ -93,7 +93,7 @@ export const TaskDetail = memo(function TaskDetail({ taskId }: TaskDetailProps) 
               setPriority(newP);
               updateTask(taskId, { priority: newP });
             }}
-            className="w-full bg-black/40 border border-white/[0.08] rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-violet-500/60"
+            className="field"
           >
             <option value="low" className="bg-[#0a0a18]">Low Velocity</option>
             <option value="medium" className="bg-[#0a0a18]">Medium Velocity</option>
@@ -103,7 +103,7 @@ export const TaskDetail = memo(function TaskDetail({ taskId }: TaskDetailProps) 
         </div>
 
         <div>
-          <label className="text-[10px] font-mono text-slate-400 block mb-1">
+          <label className="text-[11px] text-slate-400 block mb-1">
             Due Horizon
           </label>
           <input
@@ -114,7 +114,7 @@ export const TaskDetail = memo(function TaskDetail({ taskId }: TaskDetailProps) 
               setDueDate(val);
               updateTask(taskId, { dueDate: val ? new Date(val).getTime() : null });
             }}
-            className="w-full bg-black/40 border border-white/[0.08] rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-violet-500/60"
+            className="field"
           />
         </div>
       </div>
@@ -122,7 +122,7 @@ export const TaskDetail = memo(function TaskDetail({ taskId }: TaskDetailProps) 
       {/* 2-column Grid: Milestone & Task Dependency */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1 border-t border-white/[0.04]">
         <div>
-          <label className="text-[10px] font-mono text-slate-400 block mb-1">
+          <label className="text-[11px] text-slate-400 block mb-1">
             Assigned Milestone
           </label>
           <select
@@ -132,7 +132,7 @@ export const TaskDetail = memo(function TaskDetail({ taskId }: TaskDetailProps) 
               setMilestoneId(val || '');
               updateTask(taskId, { milestoneId: val });
             }}
-            className="w-full bg-black/40 border border-white/[0.08] rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-violet-500/60"
+            className="field"
           >
             <option value="" className="bg-[#0a0a18]">No Milestone Assigned</option>
             {projectMilestones.map((m) => (
@@ -144,7 +144,7 @@ export const TaskDetail = memo(function TaskDetail({ taskId }: TaskDetailProps) 
         </div>
 
         <div>
-          <label className="text-[10px] font-mono text-slate-400 block mb-1">
+          <label className="text-[11px] text-slate-400 block mb-1">
             Prerequisite Dependency
           </label>
           <select
@@ -154,7 +154,7 @@ export const TaskDetail = memo(function TaskDetail({ taskId }: TaskDetailProps) 
               setDependsOnTaskId(val || '');
               updateTask(taskId, { dependsOnTaskId: val });
             }}
-            className="w-full bg-black/40 border border-white/[0.08] rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-violet-500/60"
+            className="field"
           >
             <option value="" className="bg-[#0a0a18]">None (Independent Orbit)</option>
             {projectTasks.map((t) => (

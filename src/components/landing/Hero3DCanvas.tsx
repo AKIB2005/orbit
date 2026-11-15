@@ -1,7 +1,22 @@
-import { useRef, useMemo, memo } from 'react';
+import { useRef, useMemo, memo, useEffect } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { Float } from '@react-three/drei';
 import * as THREE from 'three';
+import { getGlowTexture } from '../../scene/glowTexture';
+import { useReducedMotionPreference } from '../../motion/useMotionPreference';
+
+function mulberry32(seed: number) {
+  return () => {
+    seed |= 0;
+    seed = (seed + 0x6d2b79f5) | 0;
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+// Module-level flag read inside frame loops without re-rendering the scene graph
+const motionState = { reduced: false };
 
 interface SatelliteData {
   radiusX: number;
@@ -27,6 +42,7 @@ const HeroCorePlanet = memo(function HeroCorePlanet() {
   const atmosphereRef = useRef<THREE.Mesh>(null);
 
   useFrame((_, delta) => {
+    if (motionState.reduced) return;
     if (planetRef.current) {
       planetRef.current.rotation.y += delta * 0.08;
     }
@@ -58,7 +74,7 @@ const HeroCorePlanet = memo(function HeroCorePlanet() {
         <meshBasicMaterial
           color="#38bdf8"
           transparent
-          opacity={0.06}
+          opacity={0.13}
           side={THREE.BackSide}
         />
       </mesh>
@@ -134,6 +150,7 @@ const SatelliteOrbit = memo(function SatelliteOrbit({ sat }: { sat: SatelliteDat
   const lineObject = useMemo(() => new THREE.Line(geometry, material), [geometry, material]);
 
   useFrame((_, delta) => {
+    if (motionState.reduced) return;
     angleRef.current += delta * sat.speed;
     if (meshRef.current) {
       meshRef.current.position.x = Math.cos(angleRef.current) * sat.radiusX;
@@ -164,6 +181,7 @@ const HeroStarDust = memo(function HeroStarDust() {
   const pointsRef = useRef<THREE.Points>(null);
 
   const [positions, colors] = useMemo(() => {
+    const rand = mulberry32(0x5eed);
     const count = 900;
     const pos = new Float32Array(count * 3);
     const col = new Float32Array(count * 3);
@@ -176,15 +194,15 @@ const HeroStarDust = memo(function HeroStarDust() {
     ];
 
     for (let i = 0; i < count; i++) {
-      const r = 5 + Math.random() * 22;
-      const theta = Math.random() * Math.PI * 2;
-      const phi = Math.acos(Math.random() * 2 - 1);
+      const r = 5 + rand() * 22;
+      const theta = rand() * Math.PI * 2;
+      const phi = Math.acos(rand() * 2 - 1);
 
       pos[i * 3] = r * Math.sin(phi) * Math.cos(theta);
       pos[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
       pos[i * 3 + 2] = r * Math.cos(phi);
 
-      const c = palette[Math.floor(Math.random() * palette.length)];
+      const c = palette[Math.floor(rand() * palette.length)];
       col[i * 3] = c.r;
       col[i * 3 + 1] = c.g;
       col[i * 3 + 2] = c.b;
@@ -194,6 +212,7 @@ const HeroStarDust = memo(function HeroStarDust() {
   }, []);
 
   useFrame((_, delta) => {
+    if (motionState.reduced) return;
     if (pointsRef.current) {
       pointsRef.current.rotation.y += delta * 0.015;
     }
@@ -206,10 +225,13 @@ const HeroStarDust = memo(function HeroStarDust() {
         <bufferAttribute attach="attributes-color" args={[colors, 3]} />
       </bufferGeometry>
       <pointsMaterial
-        size={0.03}
+        size={0.07}
+        map={getGlowTexture()}
+        alphaTest={0.02}
+        depthWrite={false}
         vertexColors
         transparent
-        opacity={0.5}
+        opacity={0.55}
         blending={THREE.AdditiveBlending}
       />
     </points>
@@ -221,6 +243,7 @@ function SceneRig({ children }: { children: React.ReactNode }) {
   const groupRef = useRef<THREE.Group>(null);
 
   useFrame(({ pointer }) => {
+    if (motionState.reduced) return;
     if (groupRef.current) {
       groupRef.current.rotation.y = THREE.MathUtils.lerp(groupRef.current.rotation.y, pointer.x * 0.12, 0.04);
       groupRef.current.rotation.x = THREE.MathUtils.lerp(groupRef.current.rotation.x, -pointer.y * 0.08, 0.04);
@@ -231,6 +254,10 @@ function SceneRig({ children }: { children: React.ReactNode }) {
 }
 
 export function Hero3DCanvas() {
+  const reduced = useReducedMotionPreference();
+  useEffect(() => {
+    motionState.reduced = reduced;
+  }, [reduced]);
   const isLowPower = typeof navigator !== 'undefined' && Boolean(navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4);
 
   return (

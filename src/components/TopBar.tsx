@@ -1,197 +1,134 @@
 import { memo, useState, useEffect } from 'react';
 import { useOrbitStore } from '../store/useOrbitStore';
+import { Icon } from './ui/Icon';
+import { HelpModal } from './HelpModal';
+import { useMediaQuery } from '../motion/useMediaQuery';
 
 interface TopBarProps {
   onReturnToLanding?: () => void;
 }
 
+const isTyping = (t: EventTarget | null) => {
+  const el = t as HTMLElement | null;
+  return !!el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT' || el.isContentEditable);
+};
+
 export const TopBar = memo(function TopBar({ onReturnToLanding }: TopBarProps) {
-  const projects = useOrbitStore((s) => s.projects);
-  const projectCount = Object.keys(projects).length;
+  const projectCount = useOrbitStore((s) => Object.keys(s.projects).length);
   const user = useOrbitStore((s) => s.user);
   const viewMode = useOrbitStore((s) => s.ui.viewMode);
   const setViewMode = useOrbitStore((s) => s.setViewMode);
   const setAuthModalOpen = useOrbitStore((s) => s.setAuthModalOpen);
   const [showHelp, setShowHelp] = useState(false);
+  const panelOpen = useOrbitStore((s) => s.ui.panelOpen);
+  const isDesktop = useMediaQuery('(min-width: 640px)');
+  // Slide the controls out from under the workspace panel instead of letting it cover them
+  const reserve = panelOpen && isDesktop ? 500 : 0;
 
   useEffect(() => {
-    if (!showHelp) return;
-    const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setShowHelp(false);
-    };
-    window.addEventListener('keydown', handleEsc);
-    return () => window.removeEventListener('keydown', handleEsc);
-  }, [showHelp]);
-
-  useEffect(() => {
-    const handleKey = (e: KeyboardEvent) => {
-      if (e.key === '?' && !e.ctrlKey && !e.metaKey && !e.altKey) {
-        const target = e.target as HTMLElement;
-        if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT') return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === '?' && !e.ctrlKey && !e.metaKey && !e.altKey && !isTyping(e.target)) {
         e.preventDefault();
-        setShowHelp((prev) => !prev);
+        setShowHelp((p) => !p);
       }
     };
-    window.addEventListener('keydown', handleKey);
-    return () => window.removeEventListener('keydown', handleKey);
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
   }, []);
-
-  const handleCreateProject = () => {
-    document.dispatchEvent(new CustomEvent('orbit:create-project'));
-  };
 
   return (
     <>
-      <header className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between px-3 sm:px-6 py-3 sm:py-4 pointer-events-none">
-        {/* Left: Brand & Mode Navigation */}
-        <div className="pointer-events-auto flex items-center gap-2 sm:gap-4">
+      <header className="absolute top-0 inset-x-0 z-20 flex items-center justify-between gap-2 px-3 sm:px-5 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 pointer-events-none"
+        style={{ paddingRight: reserve ? reserve + 16 : undefined, transition: 'padding-right 700ms var(--ease-out)' }}
+      >
+        {/* Left: way back + identity */}
+        <div className="pointer-events-auto flex items-center gap-2 min-w-0">
           {onReturnToLanding && (
             <button
               onClick={onReturnToLanding}
-              className="flex items-center gap-2 px-2.5 sm:px-3 py-1.5 rounded-lg glass-panel hover:bg-white/[0.08] text-xs font-mono text-slate-300 hover:text-white transition-all border border-white/[0.08] focus:outline-none"
-              title="Return to Landing Surface"
+              className="btn-icon btn-glass !w-9 !h-9 !rounded-xl"
+              aria-label="Back to the landing page"
+              title="Back to landing page"
             >
-              <svg className="w-3.5 h-3.5 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-              </svg>
-              <span className="hidden sm:inline">Landing</span>
+              <Icon name="arrowLeft" />
             </button>
           )}
-
-          <div className="flex items-center gap-2 sm:gap-3 glass-panel px-2.5 sm:px-3.5 py-1.5 rounded-xl">
-            <div className="w-2 h-2 rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,0.8)]" />
-            <h1 className="font-display text-xs sm:text-sm font-medium tracking-[0.2em] text-white uppercase">
-              ORBIT
-            </h1>
-            <span className="text-slate-600">|</span>
-            <span className="text-[11px] sm:text-xs text-slate-400 font-mono">
-              <span className="text-white font-medium">{projectCount}</span>/12 <span className="hidden sm:inline">WORLDS</span>
+          <div className="glass-panel h-9 rounded-xl pl-3 pr-3.5 flex items-center gap-2.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-starlight shadow-[0_0_8px_rgba(243,238,226,0.7)]" aria-hidden />
+            <h1 className="font-display text-sm font-medium tracking-[0.18em] text-white hidden sm:block">ORBIT</h1>
+            <span className="text-xs text-slate-400 tabular-nums" aria-label={`${projectCount} of 12 planets`}>
+              <span className="text-white font-medium">{projectCount}</span>
+              <span aria-hidden>/12</span>
+              <span className="hidden md:inline"> planets</span>
             </span>
           </div>
         </div>
 
-        {/* Right: Actions */}
+        {/* Right: controls */}
         <div className="pointer-events-auto flex items-center gap-1.5 sm:gap-2">
-          {/* View Mode Toggle: 3D Universe vs 2D Radar */}
-          <button
-            onClick={() => setViewMode(viewMode === '3d' ? '2d' : '3d')}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-mono rounded-lg bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-slate-300 hover:text-white transition-colors cursor-pointer"
-            title="Toggle between 3D Universe and 2D Radar Map (Mobile Fallback)"
-            aria-label="Toggle 2D Radar or 3D Universe view"
-          >
-            <span className="text-[10px] text-slate-500 font-bold">VIEW:</span>
-            <span className="font-semibold text-cyan-300">{viewMode.toUpperCase()}</span>
-          </button>
+          <div role="group" aria-label="View mode" className="glass-panel h-9 rounded-xl p-0.5 flex items-center">
+            {(['3d', '2d'] as const).map((mode) => {
+              const on = viewMode === mode;
+              return (
+                <button
+                  key={mode}
+                  onClick={() => setViewMode(mode)}
+                  aria-pressed={on}
+                  title={mode === '3d' ? '3D universe' : '2D radar'}
+                  className={`h-8 px-2.5 rounded-[0.6rem] text-xs font-medium transition-colors duration-150 ${
+                    on ? 'bg-white/[0.12] text-white' : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  {mode.toUpperCase()}
+                </button>
+              );
+            })}
+          </div>
 
-          {/* Cloud Vault / Auth Status */}
           <button
             onClick={() => setAuthModalOpen(true)}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-mono rounded-lg bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-slate-300 hover:text-white transition-colors cursor-pointer"
-            title="Open Supabase Cloud Vault & Identity"
-            aria-label="Cloud Identity & Vault"
+            className="btn btn-glass !h-9 !px-2.5 sm:!px-3 !rounded-xl"
+            aria-label={user ? `Cloud sync, signed in as ${user.name || 'you'}` : 'Cloud sync and sign in'}
           >
             <span
-              className={`w-1.5 h-1.5 rounded-full ${
-                user ? 'bg-emerald-400 shadow-[0_0_6px_#34d399]' : 'bg-slate-500'
-              }`}
+              className={`w-1.5 h-1.5 rounded-full ${user ? 'bg-emerald-400' : 'bg-slate-500'}`}
+              aria-hidden
             />
-            <span className="hidden sm:inline">{user ? user.name || 'Cloud' : 'Cloud Vault'}</span>
-            <span className="sm:hidden">{user ? 'Vault' : 'Cloud'}</span>
+            <Icon name="cloud" className="sm:hidden" />
+            <span className="hidden sm:inline max-w-[9rem] truncate">{user ? user.name || 'Synced' : 'Cloud sync'}</span>
           </button>
 
           <button
             onClick={() => document.dispatchEvent(new CustomEvent('orbit:toggle-ai'))}
-            className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 text-xs font-mono rounded-lg bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-slate-300 hover:text-white transition-colors cursor-pointer"
-            aria-label="Toggle AI Command Center (Cmd+K)"
-            title="AI Mission Navigator (Cmd+K)"
+            className="btn btn-glass !h-9 !px-2.5 sm:!px-3 !rounded-xl"
+            aria-label="Ask AI (Command K)"
           >
-            <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
-            <span className="hidden sm:inline">AI COPILOT</span>
-            <span className="sm:hidden font-semibold">AI</span>
-            <kbd className="hidden sm:inline-block px-1 py-0.2 rounded bg-black/40 border border-white/20 text-[9px]">⌘K</kbd>
+            <Icon name="sparkle" className="text-ion" />
+            <span className="hidden sm:inline">Ask AI</span>
+            <kbd className="kbd hidden lg:inline-flex">⌘K</kbd>
           </button>
 
           <button
-            onClick={handleCreateProject}
-            className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3.5 py-1.5 text-xs font-display font-medium tracking-wider uppercase rounded-lg bg-white text-[#05050d] hover:bg-slate-100 shadow-[0_1px_3px_rgba(0,0,0,0.4)] active:scale-95 transition-all cursor-pointer"
-            aria-label="Create New Celestial Project"
+            onClick={() => document.dispatchEvent(new CustomEvent('orbit:create-project'))}
+            className="btn btn-primary !h-9 !px-3 sm:!px-3.5 !rounded-xl"
+            aria-label="Create a new planet (N)"
           >
-            <span>+ <span className="hidden sm:inline">NEW </span>PLANET</span>
-            <kbd className="hidden sm:inline-block px-1 py-0.2 rounded bg-black/10 border border-black/20 text-[10px] font-mono text-black font-semibold">
-              N
-            </kbd>
+            <Icon name="plus" size={15} strokeWidth={2.25} />
+            <span className="hidden sm:inline">New planet</span>
           </button>
 
           <button
-            onClick={() => setShowHelp(!showHelp)}
-            className="px-2.5 sm:px-3 py-1.5 text-xs font-mono rounded-lg bg-white/[0.03] hover:bg-white/[0.06] border border-white/[0.06] text-slate-400 hover:text-white transition-colors cursor-pointer"
-            aria-label="Keyboard Shortcuts and Telemetry Help"
+            onClick={() => setShowHelp(true)}
+            className="btn-icon btn-glass !w-9 !h-9 !rounded-xl hidden sm:inline-flex"
+            aria-label="Keyboard shortcuts"
+            title="Shortcuts (?)"
           >
-            <kbd className="text-slate-300 font-bold">?</kbd> <span className="hidden sm:inline">HELP</span>
+            <Icon name="help" />
           </button>
         </div>
       </header>
 
-      {/* Help Modal */}
-      {showHelp && (
-        <div
-          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 pointer-events-auto"
-          onClick={() => setShowHelp(false)}
-        >
-          <div
-            className="max-w-md w-full glass-panel-glow p-6 rounded-2xl border border-white/10 shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between pb-3 border-b border-white/10 mb-4">
-              <h3 className="font-display font-bold text-lg text-white">
-                Orbit Navigation Telemetry
-              </h3>
-              <button
-                onClick={() => setShowHelp(false)}
-                className="text-slate-400 hover:text-white text-sm"
-              >
-                ✕
-              </button>
-            </div>
-
-            <div className="space-y-3 text-xs font-mono text-slate-300">
-              <div className="flex justify-between py-1 border-b border-white/[0.04]">
-                <span>Rotate Camera View</span>
-                <span className="text-cyan-300">Left Click + Drag</span>
-              </div>
-              <div className="flex justify-between py-1 border-b border-white/[0.04]">
-                <span>Zoom Perspective</span>
-                <span className="text-cyan-300">Mouse Scroll Wheel</span>
-              </div>
-              <div className="flex justify-between py-1 border-b border-white/[0.04]">
-                <span>Focus / Open Planet Tasks</span>
-                <span className="text-cyan-300">Click Any Planet</span>
-              </div>
-              <div className="flex justify-between py-1 border-b border-white/[0.04]">
-                <span>Reset Camera to Overview</span>
-                <span className="text-cyan-300">Click Cosmic Void</span>
-              </div>
-              <div className="flex justify-between py-1 border-b border-white/[0.04]">
-                <span>Create New Project</span>
-                <kbd className="px-1.5 py-0.5 rounded bg-white/10 text-white">N</kbd>
-              </div>
-              <div className="flex justify-between py-1 border-b border-white/[0.04]">
-                <span>Close Active Drawer / Modal</span>
-                <kbd className="px-1.5 py-0.5 rounded bg-white/10 text-white">ESC</kbd>
-              </div>
-            </div>
-
-            <div className="mt-6 pt-3 border-t border-white/10 flex justify-end">
-              <button
-                onClick={() => setShowHelp(false)}
-                className="px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white text-xs font-mono transition-colors"
-              >
-                Close Telemetry
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <HelpModal open={showHelp} onClose={() => setShowHelp(false)} />
     </>
   );
 });

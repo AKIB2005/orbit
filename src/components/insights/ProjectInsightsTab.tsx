@@ -119,7 +119,7 @@ export const ProjectInsightsTab = memo(function ProjectInsightsTab({ projectId }
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {/* Health Score Gauge */}
         <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/[0.06] flex flex-col justify-between">
-          <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest">
+          <span className="text-[11px] text-slate-500 ">
             Orbital Health Index
           </span>
           <div className="flex items-baseline gap-2 mt-2">
@@ -134,7 +134,7 @@ export const ProjectInsightsTab = memo(function ProjectInsightsTab({ projectId }
             >
               {metrics.healthScore}%
             </span>
-            <span className="text-xs font-mono text-slate-400">
+            <span className="text-xs text-slate-400">
               {metrics.healthScore > 80 ? 'STABLE ORBIT' : metrics.healthScore > 50 ? 'PERTURBED' : 'CRITICAL'}
             </span>
           </div>
@@ -154,14 +154,14 @@ export const ProjectInsightsTab = memo(function ProjectInsightsTab({ projectId }
 
         {/* Completion Velocity */}
         <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/[0.06] flex flex-col justify-between">
-          <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest">
+          <span className="text-[11px] text-slate-500 ">
             Satellites In Target Orbit
           </span>
           <div className="flex items-baseline gap-2 mt-2">
             <span className="font-display text-3xl font-medium text-white">
               {metrics.completionRatio}%
             </span>
-            <span className="text-xs font-mono text-slate-400">
+            <span className="text-xs text-slate-400">
               {metrics.doneCount}/{tasks.length} Done
             </span>
           </div>
@@ -175,16 +175,16 @@ export const ProjectInsightsTab = memo(function ProjectInsightsTab({ projectId }
 
         {/* Projected Horizon */}
         <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/[0.06] flex flex-col justify-between">
-          <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest">
+          <span className="text-[11px] text-slate-500 ">
             Estimated Orbit Completion
           </span>
           <div className="flex items-baseline gap-2 mt-2">
             <span className="font-display text-3xl font-medium text-slate-200">
               ~{metrics.estimatedDaysRemaining}d
             </span>
-            <span className="text-xs font-mono text-slate-400">at current burn</span>
+            <span className="text-xs text-slate-400">at current burn</span>
           </div>
-          <span className="text-[11px] font-mono text-slate-500 mt-3">
+          <span className="text-[11px] text-slate-500 mt-3">
             {metrics.todoCount + metrics.inProgressCount} payloads pending
           </span>
         </div>
@@ -193,10 +193,10 @@ export const ProjectInsightsTab = memo(function ProjectInsightsTab({ projectId }
       {/* Trajectory Burn-Up Sparkline Visualization */}
       <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.06] space-y-3">
         <div className="flex items-center justify-between">
-          <span className="text-[11px] font-mono text-slate-400 uppercase tracking-wider">
+          <span className="text-[11px] text-slate-400 ">
             Trajectory Burn-Up Vector
           </span>
-          <span className="text-xs font-mono text-cyan-400">60 FPS Kinematics</span>
+          <span className="text-xs text-cyan-400">60 FPS Kinematics</span>
         </div>
 
         {/* SVG Sparkline Curve */}
@@ -236,7 +236,7 @@ export const ProjectInsightsTab = memo(function ProjectInsightsTab({ projectId }
           </svg>
         </div>
 
-        <div className="flex justify-between text-[10px] font-mono text-slate-500 pt-1 border-t border-white/[0.04]">
+        <div className="flex justify-between text-[11px] text-slate-500 pt-1 border-t border-white/[0.04]">
           <span>Launch Inception</span>
           <span>Mid-Orbit Velocity</span>
           <span>Target Equilibrium</span>
@@ -247,23 +247,23 @@ export const ProjectInsightsTab = memo(function ProjectInsightsTab({ projectId }
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {/* Status Distribution */}
         <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/[0.06] space-y-3">
-          <span className="text-[11px] font-mono text-slate-400 uppercase tracking-wider block">
+          <span className="text-[11px] text-slate-400 block">
             Status Breakdown
           </span>
           <div className="space-y-2">
-            <div className="flex items-center justify-between text-xs font-mono">
+            <div className="flex items-center justify-between text-xs">
               <span className="text-slate-400 flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" /> Done
               </span>
               <span className="text-white">{metrics.doneCount}</span>
             </div>
-            <div className="flex items-center justify-between text-xs font-mono">
+            <div className="flex items-center justify-between text-xs">
               <span className="text-slate-400 flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" /> In Progress
               </span>
               <span className="text-white">{metrics.inProgressCount}</span>
             </div>
-            <div className="flex items-center justify-between text-xs font-mono">
+            <div className="flex items-center justify-between text-xs">
               <span className="text-slate-400 flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-slate-500" /> To Do
               </span>
@@ -274,23 +274,23 @@ export const ProjectInsightsTab = memo(function ProjectInsightsTab({ projectId }
 
         {/* Priority Matrix */}
         <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/[0.06] space-y-3">
-          <span className="text-[11px] font-mono text-slate-400 uppercase tracking-wider block">
+          <span className="text-[11px] text-slate-400 block">
             Velocity Priority Mix
           </span>
           <div className="space-y-2">
-            <div className="flex items-center justify-between text-xs font-mono">
+            <div className="flex items-center justify-between text-xs">
               <span className="text-red-400">Critical</span>
               <span className="text-white">{metrics.criticalCount}</span>
             </div>
-            <div className="flex items-center justify-between text-xs font-mono">
+            <div className="flex items-center justify-between text-xs">
               <span className="text-orange-400">High</span>
               <span className="text-white">{metrics.highCount}</span>
             </div>
-            <div className="flex items-center justify-between text-xs font-mono">
+            <div className="flex items-center justify-between text-xs">
               <span className="text-amber-400">Medium</span>
               <span className="text-white">{metrics.mediumCount}</span>
             </div>
-            <div className="flex items-center justify-between text-xs font-mono">
+            <div className="flex items-center justify-between text-xs">
               <span className="text-slate-400">Low</span>
               <span className="text-white">{metrics.lowCount}</span>
             </div>
@@ -301,22 +301,22 @@ export const ProjectInsightsTab = memo(function ProjectInsightsTab({ projectId }
       {/* Bottlenecks and Anomaly Detection */}
       <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/[0.06] space-y-2.5">
         <div className="flex items-center justify-between">
-          <span className="text-[11px] font-mono text-slate-400 uppercase tracking-wider">
+          <span className="text-[11px] text-slate-400 ">
             Gravitational Perturbations & Risks
           </span>
-          <span className="text-[10px] font-mono text-slate-500">Autonomous Diagnostics</span>
+          <span className="text-[11px] text-slate-500">Autonomous Diagnostics</span>
         </div>
 
         {metrics.bottlenecks.length === 0 ? (
-          <p className="text-xs font-mono text-emerald-400/90 pt-1">
-            ✓ Zero gravitational anomalies detected. All task satellites maintain stable orbital trajectory.
+          <p className="text-xs text-emerald-400/90 pt-1">
+            No problems found. Everything in this project is on track.
           </p>
         ) : (
           <ul className="space-y-2 pt-1">
             {metrics.bottlenecks.map((b, idx) => (
               <li
                 key={idx}
-                className="text-xs font-mono text-amber-300/90 flex items-start gap-2 p-2 rounded-lg bg-amber-500/5 border border-amber-500/15"
+                className="text-xs text-amber-300/90 flex items-start gap-2 p-2 rounded-lg bg-amber-500/5 border border-amber-500/15"
               >
                 <span>⚠</span>
                 <span>{b}</span>

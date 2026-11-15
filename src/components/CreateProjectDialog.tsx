@@ -1,11 +1,13 @@
 import { memo, useState, useEffect } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
 import { useOrbitStore } from '../store/useOrbitStore';
 import type { ColorTheme } from '../types';
 import { COLOR_THEME_MAP } from '../types';
 import { getOrbitalParameters, calculateOrbitalPosition } from '../utils/orbitalKinematics';
+import { Modal } from './ui/Modal';
+import { Icon } from './ui/Icon';
 
 const THEMES: ColorTheme[] = ['violet', 'cyan', 'rose', 'amber', 'emerald', 'blue', 'orange', 'teal'];
+const MAX_PROJECTS = 12;
 
 export const CreateProjectDialog = memo(function CreateProjectDialog() {
   const [open, setOpen] = useState(false);
@@ -13,142 +15,146 @@ export const CreateProjectDialog = memo(function CreateProjectDialog() {
   const [description, setDescription] = useState('');
   const [colorTheme, setColorTheme] = useState<ColorTheme>('violet');
   const createProject = useOrbitStore((s) => s.createProject);
-  const projects = useOrbitStore((s) => s.projects);
-  const projectCount = Object.keys(projects).length;
+  const addToast = useOrbitStore((s) => s.addToast);
+  const projectCount = useOrbitStore((s) => Object.keys(s.projects).length);
+  const full = projectCount >= MAX_PROJECTS;
 
   useEffect(() => {
     const handleOpen = () => setOpen(true);
     document.addEventListener('orbit:create-project', handleOpen);
-    const handleKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && open) {
-        setOpen(false);
-        return;
-      }
-      if (e.key === 'n' && !e.ctrlKey && !e.metaKey && !e.altKey && !open) {
-        const target = e.target as HTMLElement;
-        if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT') return;
-        e.preventDefault();
-        setOpen(true);
-      }
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'n' || e.ctrlKey || e.metaKey || e.altKey || open) return;
+      const t = e.target as HTMLElement;
+      if (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable) return;
+      e.preventDefault();
+      setOpen(true);
     };
-    window.addEventListener('keydown', handleKey);
+    window.addEventListener('keydown', onKey);
     return () => {
       document.removeEventListener('orbit:create-project', handleOpen);
-      window.removeEventListener('keydown', handleKey);
+      window.removeEventListener('keydown', onKey);
     };
   }, [open]);
+
+  const reset = () => {
+    setName('');
+    setDescription('');
+    setColorTheme('violet');
+  };
+  const close = () => {
+    setOpen(false);
+    reset();
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const trimmed = name.trim();
-    if (!trimmed || projectCount >= 12) return;
-    const orbitParams = getOrbitalParameters(projectCount);
-    const initialPos = calculateOrbitalPosition(orbitParams, orbitParams.initialAngle);
+    if (!trimmed || full) return;
+    const orbit = getOrbitalParameters(projectCount);
     createProject({
       name: trimmed,
       description: description.trim(),
       colorTheme,
       status: 'active',
-      position: initialPos,
+      position: calculateOrbitalPosition(orbit, orbit.initialAngle),
     });
-    setName('');
-    setDescription('');
-    setColorTheme('violet');
-    setOpen(false);
+    addToast({ type: 'success', title: 'Planet created', message: `${trimmed} is now in orbit.` });
+    close();
   };
 
-  const handleClose = () => {
-    setOpen(false);
-    setName('');
-    setDescription('');
-  };
+  const color = COLOR_THEME_MAP[colorTheme].primary;
 
   return (
-    <AnimatePresence>
-      {open && (
-        <>
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 z-40"
-            onClick={handleClose}
-          />
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[440px] max-w-[90vw] bg-surface border border-border rounded-xl shadow-2xl z-50 p-6"
-            role="dialog"
-            aria-label="Create new project"
-          >
-            <h2 className="text-lg font-semibold text-text-primary mb-4">Create Project</h2>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="text-xs text-text-muted block mb-1">Name</label>
-                <input
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  maxLength={60}
-                  autoFocus
-                  required
-                  placeholder="Project name"
-                  className="w-full bg-elevated border border-border rounded-md px-3 py-2 text-sm text-text-primary placeholder:text-text-muted/50 focus:outline-none focus:border-accent-violet/50"
-                />
-              </div>
-              <div>
-                <label className="text-xs text-text-muted block mb-1">Description</label>
-                <textarea
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  maxLength={500}
-                  rows={2}
-                  placeholder="What is this project about?"
-                  className="w-full bg-elevated border border-border rounded-md px-3 py-2 text-sm text-text-primary placeholder:text-text-muted/50 focus:outline-none focus:border-accent-violet/50 resize-none"
-                />
-              </div>
-              <div>
-                <label className="text-xs text-text-muted block mb-2">Color Theme</label>
-                <div className="flex gap-2">
-                  {THEMES.map((theme) => (
-                    <button
-                      key={theme}
-                      type="button"
-                      onClick={() => setColorTheme(theme)}
-                      className={`w-8 h-8 rounded-full border-2 transition-all ${
-                        colorTheme === theme ? 'border-white scale-110' : 'border-transparent hover:scale-105'
-                      }`}
-                      style={{ backgroundColor: COLOR_THEME_MAP[theme].primary }}
-                      aria-label={`Color: ${theme}`}
-                    />
-                  ))}
-                </div>
-              </div>
-              {projectCount >= 12 && (
-                <p className="text-xs text-amber-400">Maximum 12 projects reached.</p>
-              )}
-              <div className="flex gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={handleClose}
-                  className="flex-1 px-4 py-2 text-sm bg-elevated text-text-muted rounded-md hover:text-text-primary transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={!name.trim() || projectCount >= 12}
-                  className="flex-1 px-4 py-2 text-sm bg-white text-[#05050d] font-medium rounded-md hover:bg-slate-100 disabled:opacity-40 transition-colors shadow-sm cursor-pointer"
-                >
-                  Create
-                </button>
-              </div>
-            </form>
-          </motion.div>
-        </>
-      )}
-    </AnimatePresence>
+    <Modal open={open} onClose={close} label="Create a new planet" width="max-w-[27.5rem]">
+      <form onSubmit={handleSubmit} className="p-6">
+        <div className="flex items-start justify-between gap-4 mb-5">
+          <div className="flex items-center gap-3">
+            {/* Live preview of the planet being created */}
+            <span
+              className="w-9 h-9 rounded-full shrink-0 transition-[background-color,box-shadow] duration-300"
+              style={{ backgroundColor: color, boxShadow: `0 0 0 5px ${color}22, 0 0 24px ${color}55` }}
+              aria-hidden
+            />
+            <div>
+              <h2 className="font-display text-lg font-medium text-white leading-tight">New planet</h2>
+              <p className="text-xs text-slate-400 mt-0.5 tabular-nums">
+                {full ? 'Your system is full' : `${projectCount} of ${MAX_PROJECTS} in orbit`}
+              </p>
+            </div>
+          </div>
+          <button type="button" className="btn-icon -mr-2 -mt-1" onClick={close} aria-label="Close">
+            <Icon name="close" />
+          </button>
+        </div>
+
+        <div className="space-y-4">
+          <div>
+            <label htmlFor="cp-name" className="field-label">Name</label>
+            <input
+              id="cp-name"
+              data-autofocus
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              maxLength={60}
+              required
+              placeholder="e.g. Website relaunch"
+              className="field"
+              autoComplete="off"
+            />
+          </div>
+          <div>
+            <label htmlFor="cp-desc" className="field-label">
+              Description <span className="text-slate-500 font-normal">(optional)</span>
+            </label>
+            <textarea
+              id="cp-desc"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              maxLength={500}
+              rows={2}
+              placeholder="What is this project about?"
+              className="field resize-none"
+            />
+          </div>
+          <div role="radiogroup" aria-label="Planet colour">
+            <span className="field-label">Colour</span>
+            <div className="flex flex-wrap gap-2">
+              {THEMES.map((theme) => {
+                const on = colorTheme === theme;
+                const c = COLOR_THEME_MAP[theme].primary;
+                return (
+                  <button
+                    key={theme}
+                    type="button"
+                    role="radio"
+                    aria-checked={on}
+                    aria-label={theme}
+                    onClick={() => setColorTheme(theme)}
+                    className="w-8 h-8 rounded-full transition-[transform,box-shadow] duration-200 hover:scale-110 active:scale-95"
+                    style={{ backgroundColor: c, boxShadow: on ? `0 0 0 2px #07070f, 0 0 0 4px ${c}` : 'none' }}
+                  />
+                );
+              })}
+            </div>
+          </div>
+
+          {full && (
+            <p className="text-sm text-amber-300 bg-amber-500/10 border border-amber-500/20 rounded-lg px-3 py-2" role="status">
+              ORBIT holds up to {MAX_PROJECTS} planets. Archive or delete one to make room.
+            </p>
+          )}
+        </div>
+
+        <div className="flex gap-2 mt-6">
+          <button type="button" onClick={close} className="btn btn-ghost flex-1">
+            Cancel
+          </button>
+          <button type="submit" disabled={!name.trim() || full} className="btn btn-primary flex-1">
+            Create planet
+          </button>
+        </div>
+      </form>
+    </Modal>
   );
 });

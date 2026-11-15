@@ -66,31 +66,31 @@ export const ProjectOverviewTab = memo(function ProjectOverviewTab({
 
         <div className="flex items-center justify-between mb-3">
           <div>
-            <span className="text-[10px] font-mono uppercase tracking-widest text-slate-400">
-              MISSION PROGRESS
+            <span className="text-[11px] text-slate-400">
+              Progress
             </span>
             <div className="flex items-baseline gap-2 mt-0.5">
               <span className="font-display text-3xl font-bold text-white">
                 {progressPercent}%
               </span>
-              <span className="text-xs font-mono text-slate-400">
+              <span className="text-xs text-slate-400">
                 ({completedTasks} of {totalTasks} tasks complete)
               </span>
             </div>
           </div>
 
           <div className="text-right">
-            <span className="text-[10px] font-mono uppercase tracking-widest text-slate-400">
-              SYSTEM HEALTH
+            <span className="text-[11px] text-slate-400">
+              Health
             </span>
             <div className="flex items-center justify-end gap-1.5 mt-1">
               <span
                 className={`w-2 h-2 rounded-full ${
-                  criticalTasks > 1 ? 'bg-amber-400 animate-pulse' : 'bg-emerald-400 shadow-[0_0_8px_#34d399]'
+                  criticalTasks > 1 ? 'bg-amber-400 ' : 'bg-emerald-400 '
                 }`}
               />
-              <span className="text-xs font-mono font-medium text-slate-200">
-                {criticalTasks > 1 ? 'Attention Required' : 'Optimal Orbit'}
+              <span className="text-xs font-medium text-slate-200">
+                {criticalTasks > 1 ? 'Needs attention' : 'On track'}
               </span>
             </div>
           </div>
@@ -99,80 +99,80 @@ export const ProjectOverviewTab = memo(function ProjectOverviewTab({
         {/* Multi-segment progress bar */}
         <div className="w-full h-2 rounded-full bg-black/40 overflow-hidden flex border border-white/[0.04]">
           <div
-            className="h-full bg-emerald-400 shadow-[0_0_8px_#34d399] transition-all duration-500"
+            className="h-full bg-emerald-400  transition-all duration-500"
             style={{ width: `${progressPercent}%` }}
           />
           <div
-            className="h-full bg-amber-400 shadow-[0_0_8px_#fbbf24] transition-all duration-500"
+            className="h-full bg-amber-400  transition-all duration-500"
             style={{ width: `${totalTasks > 0 ? (inProgressTasks / totalTasks) * 100 : 0}%` }}
           />
         </div>
 
         {/* Legend */}
-        <div className="flex items-center justify-between text-[11px] font-mono text-slate-400 mt-2.5">
+        <div className="flex items-center justify-between text-[11px] text-slate-400 mt-2.5">
           <div className="flex items-center gap-4">
             <span className="flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-emerald-400" /> Done ({completedTasks})
             </span>
             <span className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-amber-400" /> In Progress ({inProgressTasks})
+              <span className="w-2 h-2 rounded-full bg-amber-400" /> In progress ({inProgressTasks})
             </span>
             <span className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-slate-500" /> To Do ({totalTasks - completedTasks - inProgressTasks})
+              <span className="w-2 h-2 rounded-full bg-slate-500" /> To do ({totalTasks - completedTasks - inProgressTasks})
             </span>
           </div>
         </div>
       </div>
 
-      {/* KPI Telemetry Tiles */}
+      {/* Key numbers */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <button
           onClick={() => openPanel('tasks')}
-          className="p-3.5 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:border-violet-500/30 transition-all text-left group"
+          className="p-3.5 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:border-white/20 transition-all text-left group"
         >
-          <div className="text-[10px] font-mono text-slate-400 uppercase tracking-wider">
-            SATELLITES
+          <div className="text-[11px] text-slate-400 ">
+            Tasks
           </div>
           <div className="text-xl font-display font-bold text-white group-hover:text-cyan-300 transition-colors mt-0.5">
             {totalTasks}
           </div>
-          <div className="text-[10px] text-slate-400 font-mono mt-1">Orbiting Tasks</div>
+          <div className="text-[11px] text-slate-400 mt-1">In this project</div>
         </button>
 
         <button
           onClick={() => openPanel('milestones')}
-          className="p-3.5 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:border-violet-500/30 transition-all text-left group"
+          className="p-3.5 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:border-white/20 transition-all text-left group"
         >
-          <div className="text-[10px] font-mono text-slate-400 uppercase tracking-wider">
-            MILESTONES
+          <div className="text-[11px] text-slate-400 ">
+            Milestones
           </div>
           <div className="text-xl font-display font-bold text-white group-hover:text-cyan-300 transition-colors mt-0.5">
             {completedMilestones}/{milestones.length}
           </div>
-          <div className="text-[10px] text-slate-400 font-mono mt-1">Roadmap Stages</div>
+          <div className="text-[11px] text-slate-400 mt-1">Completed</div>
         </button>
 
         <button
           onClick={() => openPanel('dependencies')}
-          className="p-3.5 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:border-violet-500/30 transition-all text-left group"
+          className="p-3.5 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:border-white/20 transition-all text-left group"
         >
-          <div className="text-[10px] font-mono text-slate-400 uppercase tracking-wider">
-            SYNAPTIC ARCS
+          <div className="text-[11px] text-slate-400 ">
+            Links
           </div>
           <div className="text-xl font-display font-bold text-white group-hover:text-cyan-300 transition-colors mt-0.5">
             {dependenciesCount}
           </div>
-          <div className="text-[10px] text-slate-400 font-mono mt-1">Project Links</div>
+          <div className="text-[11px] text-slate-400 mt-1">To other planets</div>
         </button>
 
         <div className="p-3.5 rounded-xl bg-white/[0.03] border border-white/[0.06]">
-          <div className="text-[10px] font-mono text-slate-400 uppercase tracking-wider">
-            HIGH URGENCY
+          <div className="text-[11px] text-slate-400 ">
+            Urgent
           </div>
           <div className={`text-xl font-display font-bold mt-0.5 ${criticalTasks > 0 ? 'text-amber-400' : 'text-slate-200'}`}>
             {criticalTasks}
           </div>
-          <div className="text-[10px] text-slate-400 font-mono mt-1">Critical / High</div>
+          <div className="text-[11px] text-slate-400 mt-1">Critical or high</div>
         </div>
       </div>
 
@@ -180,16 +180,16 @@ export const ProjectOverviewTab = memo(function ProjectOverviewTab({
       <div className="glass-panel p-5 rounded-2xl border border-white/[0.08] space-y-4">
         <div className="flex items-center justify-between pb-3 border-b border-white/[0.06]">
           <h3 className="font-display font-semibold text-sm text-white">
-            Planetary Properties
+            Details
           </h3>
-          <span className="text-[10px] font-mono text-slate-400 uppercase">
-            Auto-persisted locally
+          <span className="text-[11px] text-slate-400 ">
+            Saved automatically
           </span>
         </div>
 
         {/* Project Name */}
         <div>
-          <label className="text-xs font-mono text-slate-400 block mb-1.5">
+          <label className="field-label">
             Project Name
           </label>
           <input
@@ -197,35 +197,35 @@ export const ProjectOverviewTab = memo(function ProjectOverviewTab({
             value={project.name}
             onChange={(e) => updateProject(projectId, { name: e.target.value })}
             maxLength={60}
-            className="w-full bg-black/40 border border-white/[0.08] rounded-xl px-3.5 py-2 text-sm text-white font-medium focus:outline-none focus:border-violet-500/60 transition-colors"
+            className="field"
           />
         </div>
 
         {/* Description */}
         <div>
-          <label className="text-xs font-mono text-slate-400 block mb-1.5">
-            Core Strategic Intent
+          <label className="field-label">
+            Description
           </label>
           <textarea
             value={project.description}
             onChange={(e) => updateProject(projectId, { description: e.target.value })}
             maxLength={500}
             rows={3}
-            placeholder="Describe the overarching goal of this celestial system..."
-            className="w-full bg-black/40 border border-white/[0.08] rounded-xl px-3.5 py-2 text-sm text-slate-200 focus:outline-none focus:border-violet-500/60 transition-colors resize-none"
+            placeholder="What is this project about?"
+            className="field resize-none"
           />
         </div>
 
         {/* Status & Target Date */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label className="text-xs font-mono text-slate-400 block mb-1.5">
-              Orbital Status
+            <label className="field-label">
+              Status
             </label>
             <select
               value={project.status}
               onChange={(e) => updateProject(projectId, { status: e.target.value as ProjectStatus })}
-              className="w-full bg-black/40 border border-white/[0.08] rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-violet-500/60"
+              className="field"
             >
               {STATUS_OPTIONS.map((opt) => (
                 <option key={opt.value} value={opt.value} className="bg-[#0a0a18] text-white">
@@ -236,8 +236,8 @@ export const ProjectOverviewTab = memo(function ProjectOverviewTab({
           </div>
 
           <div>
-            <label className="text-xs font-mono text-slate-400 block mb-1.5">
-              Target Horizon Date
+            <label className="field-label">
+              Target date
             </label>
             <input
               type="date"
@@ -247,15 +247,15 @@ export const ProjectOverviewTab = memo(function ProjectOverviewTab({
                   targetDate: e.target.value ? new Date(e.target.value).getTime() : null,
                 })
               }
-              className="w-full bg-black/40 border border-white/[0.08] rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-violet-500/60"
+              className="field"
             />
           </div>
         </div>
 
         {/* Color Spectrum */}
         <div>
-          <label className="text-xs font-mono text-slate-400 block mb-2">
-            Atmospheric Color Spectrum
+          <label className="field-label">
+            Color
           </label>
           <div className="flex flex-wrap gap-2.5">
             {THEMES.map((t) => {
@@ -270,8 +270,8 @@ export const ProjectOverviewTab = memo(function ProjectOverviewTab({
                     isSelected ? 'border-white scale-110 shadow-[0_0_12px_rgba(255,255,255,0.4)]' : 'border-transparent hover:scale-105'
                   }`}
                   style={{ backgroundColor: pColor }}
-                  title={`Spectrum: ${t}`}
-                  aria-label={`Spectrum ${t}`}
+                  title={`Color: ${t}`}
+                  aria-label={`Color ${t}`}
                 />
               );
             })}

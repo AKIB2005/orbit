@@ -12,10 +12,10 @@ export const CosmicCore = memo(function CosmicCore() {
 
   const reducedMotion = useOrbitStore((s) => s.settings.reducedMotion);
 
-  useFrame((_, delta) => {
+  useFrame((state, delta) => {
     if (reducedMotion) return;
 
-    const time = Date.now() * 0.001;
+    const time = state.clock.elapsedTime;
 
     // Slow organic rotation of the core
     if (coreRef.current) {
@@ -56,7 +56,7 @@ export const CosmicCore = memo(function CosmicCore() {
         <meshStandardMaterial
           color="#38bdf8"
           emissive="#818cf8"
-          emissiveIntensity={2.2}
+          emissiveIntensity={1.0}
           roughness={0.15}
           metalness={0.9}
         />
@@ -68,7 +68,7 @@ export const CosmicCore = memo(function CosmicCore() {
         <meshBasicMaterial
           color="#8b5cf6"
           transparent
-          opacity={0.35}
+          opacity={0.22}
           blending={THREE.AdditiveBlending}
           side={THREE.BackSide}
         />
@@ -92,7 +92,7 @@ export const CosmicCore = memo(function CosmicCore() {
         <meshBasicMaterial
           color="#c084fc"
           transparent
-          opacity={0.25}
+          opacity={0.14}
           blending={THREE.AdditiveBlending}
           side={THREE.DoubleSide}
         />

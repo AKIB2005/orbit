@@ -1,6 +1,7 @@
 import { memo, useMemo } from 'react';
 import { useOrbitStore } from '../store/useOrbitStore';
 import { COLOR_THEME_MAP } from '../types';
+import { Icon } from './ui/Icon';
 
 interface PanelHeaderProps {
   projectId: string;
@@ -8,11 +9,14 @@ interface PanelHeaderProps {
   onToggleExpand: () => void;
 }
 
-export const PanelHeader = memo(function PanelHeader({
-  projectId,
-  isExpanded,
-  onToggleExpand,
-}: PanelHeaderProps) {
+const STATUS_LABEL: Record<string, string> = {
+  active: 'Active',
+  paused: 'Paused',
+  completed: 'Completed',
+  archived: 'Archived',
+};
+
+export const PanelHeader = memo(function PanelHeader({ projectId, isExpanded, onToggleExpand }: PanelHeaderProps) {
   const project = useOrbitStore((s) => s.projects[projectId]);
   const allProjects = useOrbitStore((s) => s.projects);
   const selectProject = useOrbitStore((s) => s.selectProject);
@@ -22,103 +26,74 @@ export const PanelHeader = memo(function PanelHeader({
   const projectList = useMemo(() => Object.values(allProjects), [allProjects]);
   const currentIndex = projectList.findIndex((p) => p.id === projectId);
 
-  const handlePrev = () => {
+  const step = (dir: 1 | -1) => {
     if (projectList.length <= 1) return;
-    const prevIdx = (currentIndex - 1 + projectList.length) % projectList.length;
-    selectProject(projectList[prevIdx].id);
+    selectProject(projectList[(currentIndex + dir + projectList.length) % projectList.length].id);
   };
 
-  const handleNext = () => {
-    if (projectList.length <= 1) return;
-    const nextIdx = (currentIndex + 1) % projectList.length;
-    selectProject(projectList[nextIdx].id);
-  };
-
-  const projectTasks = useMemo(
-    () => Object.values(tasks).filter((t) => t.projectId === projectId),
-    [tasks, projectId]
-  );
-  const completedTasks = projectTasks.filter((t) => t.status === 'done').length;
-  const progressPercent = projectTasks.length > 0 ? Math.round((completedTasks / projectTasks.length) * 100) : 0;
+  const { total, percent } = useMemo(() => {
+    const mine = Object.values(tasks).filter((t) => t.projectId === projectId);
+    const done = mine.filter((t) => t.status === 'done').length;
+    return { total: mine.length, percent: mine.length ? Math.round((done / mine.length) * 100) : 0 };
+  }, [tasks, projectId]);
 
   if (!project) return null;
-
-  const themeColors = COLOR_THEME_MAP[project.colorTheme];
+  const color = COLOR_THEME_MAP[project.colorTheme].primary;
 
   return (
-    <div className="p-4 border-b border-white/[0.08] bg-black/40">
+    <div className="px-4 pt-3 pb-3.5 sm:pt-4 border-b border-white/[0.07]">
       <div className="flex items-center justify-between gap-3">
-        {/* Planet Identity */}
-        <div className="flex items-center gap-3 min-w-0 flex-1">
-          <div
-            className="w-3.5 h-3.5 rounded-full shrink-0 shadow-[0_0_10px_currentColor] transition-colors"
-            style={{ backgroundColor: themeColors.primary, color: themeColors.primary }}
+        <div className="flex items-center gap-3 min-w-0">
+          <span
+            className="w-3 h-3 rounded-full shrink-0 transition-colors duration-500"
+            style={{ backgroundColor: color, boxShadow: `0 0 12px ${color}66` }}
+            aria-hidden
           />
-
-          <div className="min-w-0 flex-1">
+          <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <h2 className="font-display text-base font-bold text-white truncate">
-                {project.name}
-              </h2>
-              <span className="text-[10px] font-mono px-2 py-0.2 rounded-full bg-white/[0.06] text-slate-300 uppercase shrink-0">
-                {project.status}
-              </span>
+              <h2 className="font-display text-base font-medium text-white truncate">{project.name}</h2>
+              <span className="chip shrink-0">{STATUS_LABEL[project.status] ?? project.status}</span>
             </div>
-            <p className="text-[11px] font-mono text-slate-400 truncate mt-0.5">
-              {projectTasks.length} task satellites • {progressPercent}% orbit complete
+            <p className="text-xs text-slate-400 mt-0.5 tabular-nums">
+              {total} {total === 1 ? 'task' : 'tasks'} · {percent}% complete
             </p>
           </div>
         </div>
 
-        {/* Planet Traversal & Window Controls */}
-        <div className="flex items-center gap-1 shrink-0">
-          {/* Previous Planet */}
-          <button
-            onClick={handlePrev}
-            className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-white hover:bg-white/[0.08] transition-colors text-xs font-mono"
-            title="Cycle to previous planet"
-            aria-label="Previous Planet"
-          >
-            ◀
+        <div className="flex items-center shrink-0 -mr-1">
+          <button className="btn-icon" onClick={() => step(-1)} aria-label="Previous planet" title="Previous planet ([)">
+            <Icon name="chevronLeft" />
           </button>
-
-          {/* Next Planet */}
-          <button
-            onClick={handleNext}
-            className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-white hover:bg-white/[0.08] transition-colors text-xs font-mono"
-            title="Cycle to next planet"
-            aria-label="Next Planet"
-          >
-            ▶
+          <button className="btn-icon" onClick={() => step(1)} aria-label="Next planet" title="Next planet (])">
+            <Icon name="chevronRight" />
           </button>
-
-          {/* Expand/Collapse Width */}
           <button
+            className="btn-icon hidden sm:inline-flex"
             onClick={onToggleExpand}
-            className="w-7 h-7 hidden sm:flex items-center justify-center rounded-lg text-slate-400 hover:text-white hover:bg-white/[0.08] transition-colors text-xs font-mono ml-1"
-            title={isExpanded ? 'Collapse panel width' : 'Expand panel width'}
-            aria-label="Toggle Panel Width"
+            aria-label={isExpanded ? 'Narrow panel' : 'Widen panel'}
+            aria-pressed={isExpanded}
+            title={isExpanded ? 'Narrow panel' : 'Widen panel'}
           >
-            {isExpanded ? '⇲' : '⇱'}
+            <Icon name={isExpanded ? 'collapse' : 'expand'} />
           </button>
-
-          {/* Close Panel */}
-          <button
-            onClick={closePanel}
-            className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-white hover:bg-white/[0.08] transition-colors text-xs font-mono"
-            aria-label="Close Project Workspace"
-            title="Close workspace (Esc)"
-          >
-            ✕
+          <button className="btn-icon" onClick={closePanel} aria-label="Close workspace" title="Close (Esc)">
+            <Icon name="close" />
           </button>
         </div>
       </div>
 
-      {/* Progress Line */}
-      <div className="w-full h-1 rounded-full bg-white/[0.06] overflow-hidden mt-3">
+      {/* Progress uses the planet's own colour so the panel and the 3D body read as one object */}
+      <div
+        className="h-[3px] rounded-full bg-white/[0.07] overflow-hidden mt-3.5"
+        role="progressbar"
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={percent}
+        aria-label="Project completion"
+      >
         <div
-          className="h-full bg-gradient-to-r from-violet-500 to-cyan-400 transition-all duration-500"
-          style={{ width: `${progressPercent}%` }}
+          className="h-full rounded-full transition-[width] duration-700 ease-[var(--ease-out)]"
+          style={{ width: `${percent}%`, backgroundColor: color }}
         />
       </div>
     </div>
