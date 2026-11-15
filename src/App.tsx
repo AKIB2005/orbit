@@ -40,7 +40,7 @@ export default function App() {
       {view === 'landing' ? (
         <LandingPage onEnterOrbit={handleEnterOrbit} />
       ) : (
-        <div className="relative w-full h-screen bg-[#030308] overflow-hidden select-none">
+        <div className="relative w-full h-screen bg-[#030308] overflow-hidden">
           <SceneWrapper />
           <UIOverlay onReturnToLanding={handleReturnToLanding} />
         </div>

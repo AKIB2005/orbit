@@ -3,6 +3,7 @@ import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import type { Task, ColorTheme } from '../types';
 import { COLOR_THEME_MAP } from '../types';
+import { useOrbitStore } from '../store/useOrbitStore';
 
 interface SatelliteRingProps {
   projectId: string;
@@ -34,6 +35,7 @@ export const SatelliteRing = memo(function SatelliteRing({
   void _projectId;
   const anglesRef = useRef<number[]>([]);
   const themeColors = COLOR_THEME_MAP[colorTheme];
+  const reducedMotion = useOrbitStore((s) => s.settings.reducedMotion);
   const visibleTasks = tasks.slice(0, MAX_SATELLITES);
 
   if (anglesRef.current.length !== visibleTasks.length) {
@@ -47,7 +49,9 @@ export const SatelliteRing = memo(function SatelliteRing({
   useFrame((_, delta) => {
     visibleTasks.forEach((task, i) => {
       const speed = PRIORITY_SPEED[task.priority] ?? 0.5;
-      anglesRef.current[i] += delta * speed;
+      if (!reducedMotion) {
+        anglesRef.current[i] += delta * speed;
+      }
       const mesh = satelliteRefs.current[i];
       if (mesh) {
         mesh.position.x = Math.cos(anglesRef.current[i]) * ORBIT_RADIUS;

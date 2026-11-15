@@ -3,16 +3,9 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { useOrbitStore } from '../store/useOrbitStore';
 import type { ColorTheme } from '../types';
 import { COLOR_THEME_MAP } from '../types';
+import { getOrbitalParameters, calculateOrbitalPosition } from '../utils/orbitalKinematics';
 
 const THEMES: ColorTheme[] = ['violet', 'cyan', 'rose', 'amber', 'emerald', 'blue', 'orange', 'teal'];
-
-function getRandomPosition(): [number, number, number] {
-  return [
-    (Math.random() - 0.5) * 16,
-    (Math.random() - 0.5) * 4,
-    (Math.random() - 0.5) * 12,
-  ];
-}
 
 export const CreateProjectDialog = memo(function CreateProjectDialog() {
   const [open, setOpen] = useState(false);
@@ -26,7 +19,11 @@ export const CreateProjectDialog = memo(function CreateProjectDialog() {
     const handleOpen = () => setOpen(true);
     document.addEventListener('orbit:create-project', handleOpen);
     const handleKey = (e: KeyboardEvent) => {
-      if (e.key === 'n' && !e.ctrlKey && !e.metaKey && !e.altKey) {
+      if (e.key === 'Escape' && open) {
+        setOpen(false);
+        return;
+      }
+      if (e.key === 'n' && !e.ctrlKey && !e.metaKey && !e.altKey && !open) {
         const target = e.target as HTMLElement;
         if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT') return;
         e.preventDefault();
@@ -38,18 +35,20 @@ export const CreateProjectDialog = memo(function CreateProjectDialog() {
       document.removeEventListener('orbit:create-project', handleOpen);
       window.removeEventListener('keydown', handleKey);
     };
-  }, []);
+  }, [open]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const trimmed = name.trim();
     if (!trimmed || projectCount >= 12) return;
+    const orbitParams = getOrbitalParameters(projectCount);
+    const initialPos = calculateOrbitalPosition(orbitParams, orbitParams.initialAngle);
     createProject({
       name: trimmed,
       description: description.trim(),
       colorTheme,
       status: 'active',
-      position: getRandomPosition(),
+      position: initialPos,
     });
     setName('');
     setDescription('');

@@ -191,7 +191,6 @@ export const Planet = memo(function Planet({ projectId, orbitIndex }: PlanetProp
             anchorY="middle"
             outlineWidth={0.03}
             outlineColor="#030308"
-            font="https://fonts.gstatic.com/s/spacegrotesk/v16/V8mQoQDjQSkFtoMM3T6r8E7mF71Q-g.woff"
           >
             {project.name}
           </Text>

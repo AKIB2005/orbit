@@ -188,7 +188,7 @@ export const AICommandCenter = memo(function AICommandCenter() {
   return (
     <>
       {/* Floating Launcher Trigger Pill (Bottom Right) */}
-      <div className="fixed bottom-6 right-6 z-40 pointer-events-auto">
+      <div className="fixed bottom-20 right-4 sm:bottom-6 sm:right-6 z-40 pointer-events-auto">
         <button
           onClick={() => setIsOpen(!isOpen)}
           className="group relative flex items-center gap-3 px-4 py-2.5 rounded-2xl glass-panel-glow border border-violet-500/40 text-white font-display text-xs font-semibold tracking-wider uppercase transition-all duration-300 hover:scale-105 active:scale-95 shadow-[0_0_30px_rgba(139,92,246,0.5)] focus:outline-none"
@@ -216,7 +216,7 @@ export const AICommandCenter = memo(function AICommandCenter() {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             transition={{ type: 'spring', damping: 25, stiffness: 320 }}
-            className="fixed bottom-20 right-6 z-50 w-[460px] max-w-[94vw] h-[600px] max-h-[80vh] flex flex-col rounded-3xl glass-panel-glow border border-violet-500/40 shadow-[0_25px_70px_rgba(0,0,0,0.85)] overflow-hidden pointer-events-auto"
+            className="fixed bottom-4 sm:bottom-20 right-2 sm:right-6 z-50 w-[460px] max-w-[95vw] h-[580px] max-h-[85vh] flex flex-col rounded-2xl sm:rounded-3xl glass-panel-glow border border-violet-500/40 shadow-[0_25px_70px_rgba(0,0,0,0.85)] overflow-hidden pointer-events-auto"
             role="dialog"
             aria-label="ORBIT AI Command Center"
           >

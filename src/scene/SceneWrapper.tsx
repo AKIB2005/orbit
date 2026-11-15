@@ -1,5 +1,5 @@
 import { Canvas } from '@react-three/fiber';
-import { Suspense, memo } from 'react';
+import { Suspense, memo, useRef } from 'react';
 import { Starfield } from './Starfield';
 import { CosmicLighting } from './CosmicLighting';
 import { CosmicCore } from './CosmicCore';
@@ -11,10 +11,18 @@ import { useOrbitStore } from '../store/useOrbitStore';
 export const SceneWrapper = memo(function SceneWrapper() {
   const selectProject = useOrbitStore((s) => s.selectProject);
   const setContextMenu = useOrbitStore((s) => s.setContextMenu);
+  const pointerDownPos = useRef({ x: 0, y: 0 });
+
+  const handlePointerDown = (e: React.PointerEvent) => {
+    pointerDownPos.current = { x: e.clientX, y: e.clientY };
+  };
 
   const handlePointerMissed = (e: MouseEvent) => {
-    void e;
-    selectProject(null);
+    // Only deselect if the user clicked without significant drag (avoid camera rotation deselect)
+    const dist = Math.hypot(e.clientX - pointerDownPos.current.x, e.clientY - pointerDownPos.current.y);
+    if (dist < 6) {
+      selectProject(null);
+    }
   };
 
   const handleContextMenu = (e: React.MouseEvent) => {
@@ -23,7 +31,11 @@ export const SceneWrapper = memo(function SceneWrapper() {
   };
 
   return (
-    <div onContextMenu={handleContextMenu} className="absolute inset-0 w-full h-full">
+    <div
+      onContextMenu={handleContextMenu}
+      onPointerDown={handlePointerDown}
+      className="absolute inset-0 w-full h-full select-none"
+    >
       <Canvas
         camera={{ position: [0, 14, 25], fov: 48, near: 0.1, far: 150 }}
         dpr={[1, 1.75]}

@@ -96,7 +96,7 @@ export const OrbitalFeatures = memo(function OrbitalFeatures() {
       </div>
 
       {/* Feature Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10">
+      <div id="mechanics" className="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10 scroll-mt-24">
         {FEATURES.map((feat, idx) => (
           <div
             key={idx}

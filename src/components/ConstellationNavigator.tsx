@@ -40,7 +40,7 @@ export const ConstellationNavigator = memo(function ConstellationNavigator() {
   return (
     <nav
       ref={navRef}
-      className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 pointer-events-auto max-w-[95vw] overflow-x-auto py-2 px-3 glass-panel rounded-2xl border border-white/[0.08] shadow-[0_12px_40px_rgba(0,0,0,0.6)]"
+      className="absolute bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 z-20 pointer-events-auto max-w-[92vw] overflow-x-auto py-1.5 sm:py-2 px-2.5 sm:px-3 glass-panel rounded-2xl border border-white/[0.08] shadow-[0_12px_40px_rgba(0,0,0,0.6)]"
       role="tablist"
       aria-label="Celestial Planetary Navigator"
     >

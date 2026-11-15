@@ -1,4 +1,4 @@
-import { memo, useMemo, useState } from 'react';
+import { memo, useMemo, useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useOrbitStore } from '../store/useOrbitStore';
 import { PanelHeader } from './PanelHeader';
@@ -17,6 +17,17 @@ export const SlidePanel = memo(function SlidePanel() {
   const closePanel = useOrbitStore((s) => s.closePanel);
 
   const [isExpanded, setIsExpanded] = useState(false);
+
+  useEffect(() => {
+    if (!panelOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        closePanel();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [panelOpen, closePanel]);
 
   const content = useMemo(() => {
     if (!selectedProjectId) return null;

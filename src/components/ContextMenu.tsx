@@ -23,6 +23,13 @@ export const ContextMenu = memo(function ContextMenu() {
     };
   }, [setContextMenu]);
 
+  const x = contextMenu
+    ? Math.max(12, Math.min(contextMenu.x, (typeof window !== 'undefined' ? window.innerWidth : 1000) - 180))
+    : 0;
+  const y = contextMenu
+    ? Math.max(12, Math.min(contextMenu.y, (typeof window !== 'undefined' ? window.innerHeight : 800) - 200))
+    : 0;
+
   return (
     <AnimatePresence>
       {contextMenu && (
@@ -32,8 +39,8 @@ export const ContextMenu = memo(function ContextMenu() {
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.95 }}
           transition={{ duration: 0.1 }}
-          className="absolute z-50 bg-elevated border border-border rounded-lg shadow-xl py-1 min-w-[160px] pointer-events-auto"
-          style={{ left: contextMenu.x, top: contextMenu.y }}
+          className="fixed z-50 bg-elevated border border-border rounded-lg shadow-xl py-1 min-w-[160px] pointer-events-auto"
+          style={{ left: x, top: y }}
           role="menu"
         >
           {contextMenu.targetId ? (
