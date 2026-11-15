@@ -1,5 +1,5 @@
 import { Canvas } from '@react-three/fiber';
-import { Suspense, memo, useRef } from 'react';
+import { Suspense, memo, useRef, useMemo } from 'react';
 import { Starfield } from './Starfield';
 import { CosmicLighting } from './CosmicLighting';
 import { CosmicCore } from './CosmicCore';
@@ -11,7 +11,14 @@ import { useOrbitStore } from '../store/useOrbitStore';
 export const SceneWrapper = memo(function SceneWrapper() {
   const selectProject = useOrbitStore((s) => s.selectProject);
   const setContextMenu = useOrbitStore((s) => s.setContextMenu);
+  const reducedMotion = useOrbitStore((s) => s.settings.reducedMotion);
   const pointerDownPos = useRef({ x: 0, y: 0 });
+
+  const targetDpr = useMemo<[number, number]>(() => {
+    if (typeof window === 'undefined') return [1, 1.5];
+    const isLowPower = (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4) || reducedMotion;
+    return isLowPower ? [1, 1.2] : [1, 1.75];
+  }, [reducedMotion]);
 
   const handlePointerDown = (e: React.PointerEvent) => {
     pointerDownPos.current = { x: e.clientX, y: e.clientY };
@@ -38,7 +45,7 @@ export const SceneWrapper = memo(function SceneWrapper() {
     >
       <Canvas
         camera={{ position: [0, 14, 25], fov: 48, near: 0.1, far: 150 }}
-        dpr={[1, 1.75]}
+        dpr={targetDpr}
         gl={{ antialias: true, powerPreference: 'high-performance' }}
         style={{ width: '100%', height: '100%' }}
         onPointerMissed={handlePointerMissed}

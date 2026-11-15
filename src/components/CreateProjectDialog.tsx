@@ -13,7 +13,8 @@ export const CreateProjectDialog = memo(function CreateProjectDialog() {
   const [description, setDescription] = useState('');
   const [colorTheme, setColorTheme] = useState<ColorTheme>('violet');
   const createProject = useOrbitStore((s) => s.createProject);
-  const projectCount = useOrbitStore((s) => Object.keys(s.projects).length);
+  const projects = useOrbitStore((s) => s.projects);
+  const projectCount = Object.keys(projects).length;
 
   useEffect(() => {
     const handleOpen = () => setOpen(true);

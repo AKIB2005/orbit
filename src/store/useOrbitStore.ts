@@ -107,16 +107,41 @@ const defaultSettings: AppSettings = {
   autoSyncCloud: true,
 };
 
+const memoryFallback = new Map<string, string>();
+
 const idbStorage = createJSONStorage(() => ({
   getItem: async (name: string) => {
-    const val = await idbGet(name);
-    return val ?? null;
+    if (typeof indexedDB === 'undefined') {
+      return memoryFallback.get(name) ?? null;
+    }
+    try {
+      const val = await idbGet(name);
+      return val ?? null;
+    } catch {
+      return memoryFallback.get(name) ?? null;
+    }
   },
   setItem: async (name: string, value: string) => {
-    await idbSet(name, value);
+    if (typeof indexedDB === 'undefined') {
+      memoryFallback.set(name, value);
+      return;
+    }
+    try {
+      await idbSet(name, value);
+    } catch {
+      memoryFallback.set(name, value);
+    }
   },
   removeItem: async (name: string) => {
-    await idbDel(name);
+    if (typeof indexedDB === 'undefined') {
+      memoryFallback.delete(name);
+      return;
+    }
+    try {
+      await idbDel(name);
+    } catch {
+      memoryFallback.delete(name);
+    }
   },
 }));
 
@@ -326,6 +351,11 @@ export const useOrbitStore = create<OrbitStore>()(
         set((s) => {
           const tasks = { ...s.tasks };
           delete tasks[id];
+          for (const key of Object.keys(tasks)) {
+            if (tasks[key].dependsOnTaskId === id) {
+              tasks[key] = { ...tasks[key], dependsOnTaskId: null };
+            }
+          }
           return { tasks };
         });
 

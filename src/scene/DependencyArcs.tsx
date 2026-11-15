@@ -1,4 +1,4 @@
-import { memo, useRef, useMemo } from 'react';
+import { memo, useRef, useMemo, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useOrbitStore } from '../store/useOrbitStore';
@@ -60,6 +60,13 @@ const DynamicDependencyArc = memo(function DynamicDependencyArc({
   const lineObject = useMemo(() => {
     const l = new THREE.Line(geometry, material);
     return l;
+  }, [geometry, material]);
+
+  useEffect(() => {
+    return () => {
+      geometry.dispose();
+      material.dispose();
+    };
   }, [geometry, material]);
 
   useFrame((_, delta) => {

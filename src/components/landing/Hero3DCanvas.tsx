@@ -231,11 +231,13 @@ function SceneRig({ children }: { children: React.ReactNode }) {
 }
 
 export function Hero3DCanvas() {
+  const isLowPower = typeof navigator !== 'undefined' && Boolean(navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4);
+
   return (
     <div className="w-full h-full relative pointer-events-none select-none">
       <Canvas
         camera={{ position: [0, 0.6, 9.2], fov: 42, near: 0.1, far: 100 }}
-        dpr={[1, 1.75]}
+        dpr={isLowPower ? [1, 1.2] : [1, 1.75]}
         gl={{ antialias: true, alpha: true, powerPreference: 'high-performance' }}
       >
         <ambientLight intensity={0.25} color="#050510" />

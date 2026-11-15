@@ -1,4 +1,4 @@
-import { memo, useRef, useEffect } from 'react';
+import { memo, useRef, useEffect, useMemo } from 'react';
 import { useOrbitStore } from '../store/useOrbitStore';
 import { COLOR_THEME_MAP } from '../types';
 
@@ -9,7 +9,7 @@ export const ConstellationNavigator = memo(function ConstellationNavigator() {
   const selectProject = useOrbitStore((s) => s.selectProject);
   const navRef = useRef<HTMLDivElement>(null);
 
-  const projectList = Object.values(projects);
+  const projectList = useMemo(() => Object.values(projects), [projects]);
 
   // Keyboard arrow navigation
   const handleKeyDown = (e: React.KeyboardEvent, index: number) => {

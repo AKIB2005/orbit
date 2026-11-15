@@ -6,7 +6,8 @@ interface TopBarProps {
 }
 
 export const TopBar = memo(function TopBar({ onReturnToLanding }: TopBarProps) {
-  const projectCount = useOrbitStore((s) => Object.keys(s.projects).length);
+  const projects = useOrbitStore((s) => s.projects);
+  const projectCount = Object.keys(projects).length;
   const user = useOrbitStore((s) => s.user);
   const viewMode = useOrbitStore((s) => s.ui.viewMode);
   const setViewMode = useOrbitStore((s) => s.setViewMode);

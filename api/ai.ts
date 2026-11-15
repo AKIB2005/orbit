@@ -64,11 +64,18 @@ Respond in valid JSON format:
     const candidateText = result.candidates?.[0]?.content?.parts?.[0]?.text;
     const parsed = candidateText ? JSON.parse(candidateText) : null;
 
+    const responseText = parsed?.response || parsed?.message || 'Instructions compiled successfully.';
+    const actionsList = parsed?.suggestedActions || parsed?.actions || [];
+
     return res.status(200).json({
       success: true,
       provider: 'gemini',
-      message: parsed?.message || 'Instructions compiled successfully.',
-      actions: parsed?.actions || [],
+      message: responseText,
+      actions: actionsList,
+      data: {
+        response: responseText,
+        suggestedActions: actionsList,
+      },
     });
   } catch (err: any) {
     return res.status(500).json({

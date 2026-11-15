@@ -37,8 +37,10 @@ export const Planet = memo(function Planet({ projectId, orbitIndex }: PlanetProp
   const hoverProject = useOrbitStore((s) => s.hoverProject);
   const setContextMenu = useOrbitStore((s) => s.setContextMenu);
   const reducedMotion = useOrbitStore((s) => s.settings.reducedMotion);
-  const tasks = useOrbitStore((s) =>
-    Object.values(s.tasks).filter((t) => t.projectId === projectId)
+  const allTasks = useOrbitStore((s) => s.tasks);
+  const tasks = useMemo(
+    () => Object.values(allTasks).filter((t) => t.projectId === projectId),
+    [allTasks, projectId]
   );
 
   const orbit = useMemo(() => getOrbitalParameters(orbitIndex), [orbitIndex]);

@@ -1,9 +1,10 @@
-import { memo } from 'react';
+import { memo, useMemo } from 'react';
 import { useOrbitStore } from '../store/useOrbitStore';
 import { Planet } from './Planet';
 
 export const PlanetGroup = memo(function PlanetGroup() {
-  const projectIds = useOrbitStore((s) => Object.keys(s.projects));
+  const projects = useOrbitStore((s) => s.projects);
+  const projectIds = useMemo(() => Object.keys(projects), [projects]);
 
   return (
     <group>
